@@ -1,7 +1,6 @@
 <?php
-session_start();
-include('funcs.php');
-check_session_id();
+include 'anon_session.php';
+include_once 'funcs.php';
 
 if (
   !isset($_GET['id']) || $_GET['id'] === ''
@@ -9,16 +8,18 @@ if (
   exit('paramError');
 }
 
+$uid = current_anon_user_id();
+
 $id = $_GET['id'];
 
 // DB接続
 $pdo = db_conn();
 
-$sql = 'UPDATE records SET deleted_at=now() WHERE id=:id AND user_id=:user_id';
+$sql = 'DELETE FROM daily_logs WHERE id=:id AND anonymous_user_id = :uid';
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-$stmt->bindValue(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+$stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
 
 try {
   $status = $stmt->execute();
@@ -27,6 +28,7 @@ try {
   exit();
 }
 
+set_flash('記録を削除しました');
 header("Location:read.php");
 exit();
 

@@ -1,12 +1,11 @@
 <?php
-session_start();
-include('funcs.php');
-check_session_id();
+
+include 'anon_session.php';
+include_once 'funcs.php';
 
 if (
-  !isset($_POST['record_date']) || $_POST['record_date'] === '' ||
-  !isset($_POST['record_time']) || $_POST['record_time'] === '' ||
-  !isset($_POST['record_type']) || $_POST['record_type'] === '' ||
+  !isset($_POST['log_date']) || $_POST['log_date'] === '' ||
+  !isset($_POST['log_time']) || $_POST['log_time'] === '' ||
   !isset($_POST['weather']) || $_POST['weather'] === '' ||
   !isset($_POST['body_condition']) || $_POST['body_condition'] === '' ||
   !isset($_POST['mental_condition']) || $_POST['mental_condition'] === '' ||
@@ -16,47 +15,44 @@ if (
   exit('paramError');
 }
 
-$record_date = $_POST['record_date'];
-$record_time = $_POST['record_time'];
-$record_type = $_POST['record_type'];
+$uid = current_anon_user_id();
+$log_date = $_POST['log_date'];
+$log_time = $_POST['log_time'];
 $weather = $_POST['weather'];
 $body_condition = $_POST['body_condition'];
 $mental_condition = $_POST['mental_condition'];
-$want_to_do = $_POST['want_to_do'];
 $memo = $_POST['memo'];
 $id = $_POST['id'];
 
-$want_to_do = '';
-if (isset($_POST['want_to_do']) && is_array($_POST['want_to_do'])) {
-  $want_to_do = implode(',', $_POST['want_to_do']);
+$activity_type = '';
+if(isset($_POST['activity_type']) && is_array($_POST['activity_type'])){
+  $activity_type = implode(',', $_POST['activity_type']);
 }
 
 // DB接続
 $pdo = db_conn();
 
-$sql = 'UPDATE records
-        SET    record_date=:record_date, 
-               record_time=:record_time,
-               record_type=:record_type,
+$sql = 'UPDATE daily_logs
+        SET    log_date=:log_date, 
+               log_time=:log_time,
                weather=:weather,
                body_condition=:body_condition, 
                mental_condition=:mental_condition, 
-               want_to_do=:want_to_do, 
+               activity_type=:activity_type, 
                memo=:memo, 
                updated_at=now() 
-        WHERE  id = :id AND user_id = :user_id';
+        WHERE  id = :id AND anonymous_user_id = :uid';
 
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(':record_date', $record_date, PDO::PARAM_STR);
-$stmt->bindValue(':record_time', $record_time, PDO::PARAM_STR);
-$stmt->bindValue(':record_type', $record_type, PDO::PARAM_STR);
+$stmt->bindValue(':log_date', $log_date, PDO::PARAM_STR);
+$stmt->bindValue(':log_time', $log_time, PDO::PARAM_STR);
 $stmt->bindValue(':weather', $weather, PDO::PARAM_STR);
 $stmt->bindValue(':body_condition', $body_condition, PDO::PARAM_INT);
 $stmt->bindValue(':mental_condition', $mental_condition, PDO::PARAM_INT);
-$stmt->bindValue(':want_to_do', $want_to_do, PDO::PARAM_STR);
+$stmt->bindValue(':activity_type', $activity_type, PDO::PARAM_STR);
 $stmt->bindValue(':memo', $memo, PDO::PARAM_STR);
 $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-$stmt->bindValue(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+$stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
 
 try {
   $status = $stmt->execute();
@@ -65,5 +61,6 @@ try {
   exit();
 }
 
+set_flash('記録を更新しました');
 header("Location:read.php");
 exit();

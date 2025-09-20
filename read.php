@@ -1,15 +1,16 @@
 <?php
-session_start();
-include('funcs.php');
-check_session_id();
+include 'anon_session.php';
+include_once 'funcs.php';
 
 // DB接続
 $pdo = db_conn();
 
+$uid = current_anon_user_id();
+
 // SQL作成&実行
-$sql = 'SELECT * FROM records WHERE deleted_at IS NULL AND user_id=:user_id ORDER BY record_date DESC, record_time DESC';
+$sql = 'SELECT * FROM daily_logs WHERE anonymous_user_id = :uid ORDER BY log_date DESC, log_time DESC';
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+$stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
 try {
   $status = $stmt->execute();
 } catch (PDOException $e) {
@@ -32,18 +33,17 @@ function conditionText($num) {
 $elements = '';
 foreach ($results as $record) {
   $elements .= "
-    <div class='btn_box'>
-      <div class='btn'><a href='edit.php?id={$record["id"]}'>編集</a></div>
-      <div class='btn'><a href='delete.php?id={$record["id"]}' onclick=\"return confirm('本当に削除しますか？');\">削除</a></div>
+    <div class='button_box'>
+      <div class='button'><a href='edit.php?id={$record["id"]}'>編集</a></div>
+      <div class='button'><a href='delete.php?id={$record["id"]}' onclick=\"return confirm('本当に削除しますか？');\">削除</a></div>
     </div>
     <div class='card'>
-      <div class='card-header'>{$record['record_date']} {$record['record_time']} - {$record['record_type']}</div>
+      <div class='card-header'>{$record['log_date']} {$record['log_time']}</div>
       <div class='card-body'>
-        <p><strong>ニックネーム:</strong> {$record['nickname']}</p>
         <p><strong>天気:</strong> {$record['weather']}</p>
         <p><strong>体調:</strong> " . conditionText($record['body_condition']) . "</p>
         <p><strong>心調:</strong> " . conditionText($record['mental_condition']) . "</p>
-        <p><strong>やりたい/やったこと:</strong> {$record['want_to_do']}</p>
+        <p><strong>やったこと:</strong> {$record['activity_type']}</p>
         <p><strong>ひとこと:</strong> {$record['memo']}</p>
       </div>
     </div>
@@ -57,10 +57,24 @@ foreach ($results as $record) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>今までのきろく一覧</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
   <style>
     body {
       background: #f5f5f5;
-      padding: 20px;
+    }
+    header {
+      background: #a7d7c5;
+      padding: 1.5em;
+      text-align: center;
+    }
+    header img {
+      align-items: center;
+      mix-blend-mode: multiply;
+    }
+    p.tagline {
+      font-size: 1.2em;
+      color: #555;
     }
     fieldset {
       max-width: 500px;
@@ -104,12 +118,12 @@ foreach ($results as $record) {
     .card-body p {
       margin: 4px 0;
     }
-    .btn_box {
+    .button_box {
       display: flex;
       justify-content: space-between;
       line-height: 30px;
     }
-    .btn {
+    .button {
       width: 50%;
       height: 30px;
       text-align: center;
@@ -118,27 +132,79 @@ foreach ($results as $record) {
       box-shadow: 0 0 3px rgba(0,0,0,0.1);
       margin: 2px;
     }
-    .btn a {
+    .button a {
       display: block;
       color:rgb(44, 44, 44);
     }
-    .btn:hover {
+    .button:hover {
       background: gray;
 
     }
-    .btn a:hover {
+    .button a:hover {
       color: white;
       text-decoration: none;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .footerMenuList {
+      background-color: #a7d7c5;
+      padding: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn{
+      display: inline-block;
+    }
+    .btn img{
+      display: block;
     }
   </style>
 </head>
 <body>
+<?php $flash = pop_flash(); ?>
+<?php if ($flash): ?>
+  <div class="flash <?= h($flash['type']) ?>" id="flashBox">
+    <?= h($flash['message']) ?>
+  </div>
+  <script>
+    // 2.0秒でフェードアウト→消す
+    setTimeout(() => {
+      const box = document.getElementById('flashBox');
+      if (!box) return;
+      box.style.opacity = '0';
+      setTimeout(() => box.remove(), 400); // フェード後にDOMから消す
+    }, 2000);
+  </script>
+<?php endif; ?>
+<header>
+  <img src="images/title_logo.png" alt="アプリロゴ画像" width="380px">
+  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
+</header>
   <fieldset>
-    <legend><?=$_SESSION['username']?>さんの今までのきろく一覧</legend>
-    <a href="input.php">入力画面に戻る</a>
-    <a href="logout.php">ログアウトする</a>
-    <a href="index.php">メインページに戻る</a>
+    <legend>あなたの今までのきろく一覧</legend>
     <?= $elements ?>
   </fieldset>
+<footer>
+  <div class="footerMenuList">
+    <div>
+      <a href="index.php" class="btn"><img src="images/home.png" alt="ホームのアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="input.php" class="btn"><img src="images/memo.png" alt="入力のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="articles.php" class="btn"><img src="images/book.png" alt="記事のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援のアイコン" width="60px"></a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

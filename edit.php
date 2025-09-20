@@ -1,17 +1,19 @@
 <?php
-session_start();
-include('funcs.php');
-check_session_id();
+include 'anon_session.php';
+include_once 'funcs.php';
+
+$options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','ぼーっとする','ゲーム','手芸','読書','料理'];
 
 $pdo = db_conn();
+$uid = current_anon_user_id();
 
 $id = $_GET['id'];
 
-$sql = 'SELECT * FROM records WHERE id = :id AND user_id = :user_id';
+$sql = 'SELECT * FROM daily_logs WHERE id = :id AND anonymous_user_id = :uid';
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-$stmt->bindValue(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+$stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
 
 try {
   $status = $stmt->execute();
@@ -22,11 +24,8 @@ try {
 
 $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// やりたいことの選択肢
-$options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲーム','手芸','読書','料理'];
-
 // 追加：保存されている値を配列に変換
-$checked_options = explode(',', $record['want_to_do']);
+$checked_options = explode(',', $record['activity_type']);
 
 ?>
 
@@ -37,10 +36,24 @@ $checked_options = explode(',', $record['want_to_do']);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>今までのきろく（編集）</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
 <style>
     body {
       background: #f5f5f5;
-      padding: 20px;
+    }
+    header {
+      background: #a7d7c5;
+      padding: 1.5em;
+      text-align: center;
+    }
+    header img {
+      align-items: center;
+      mix-blend-mode: multiply;
+    }
+    p.tagline {
+      font-size: 1.2em;
+      color: #555;
     }
     form {
       background: #fff;
@@ -150,36 +163,45 @@ $checked_options = explode(',', $record['want_to_do']);
     a:hover {
       text-decoration: underline;
     }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .footerMenuList {
+      background-color: #a7d7c5;
+      padding: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn{
+      display: inline-block;
+    }
+    .btn img{
+      display: block;
+    }
   </style>
 </head>
 
-<body>
+<body class="page-has-footer">
+<header>
+  <img src="images/title_logo.png" alt="アプリロゴ画像" width="380px">
+  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
+</header>
   <form action="update.php" method="POST">
     <fieldset>
       <legend>今までの記録（編集）</legend>
-      <a href="read.php">今までのきろく一覧に戻る</a>
 
       <div class="form-row">
-        <label>記録日：</label>
-        <input type="date" name="record_date" value="<?= htmlspecialchars($record['record_date']) ?>">
-      </div>
-
-      <div class="form-row">
-        <label>記録時間：</label>
-        <input type="time" name="record_time" value="<?= htmlspecialchars(substr($record['record_time'],0,5)) ?>">
-      </div>
-      
-      <div class="form-row">
-        <label>記録の種類：</label>
-        <select name="record_type">
-          <option value="朝" <?= $record['record_type'] === '朝' ? 'selected' : '' ?>>朝のきろく</option>
-          <option value="夜" <?= $record['record_type'] === '夜' ? 'selected' : '' ?>>夜のきろく</option>
-        </select>
+        <label>記録日時：</label>
+        <input type="date" name="log_date" value="<?= htmlspecialchars($record['log_date']) ?>">
+        <input type="time" name="log_time" value="<?= htmlspecialchars(substr($record['log_time'],0,5)) ?>"> 
       </div>
       
       <div class="form-row">
         <label>天気：</label>
         <input type="text" name="weather" value="<?= $record['weather'] ?>">
+      </div>
       </div>
 
       <label>体の調子：</label>
@@ -196,16 +218,16 @@ $checked_options = explode(',', $record['want_to_do']);
         <div class="range_good">良い</div>
       </div>
 
-      <label>やりたいこと / やったこと（複数選択可）：</label>
+      <label>やったこと：</label>
       <div class="checkbox-group">
         <?php foreach($options as $opt): ?>
           <label>
             <input 
               type="checkbox" 
-              name="want_to_do[]" 
+              name="activity_type[]" 
               value="<?= $opt ?>" 
               <?= in_array($opt, $checked_options) ? 'checked' : '' ?>
-            > <?= $opt ?>
+              > <?= $opt ?>
           </label>
         <?php endforeach; ?>
       </div>
@@ -218,7 +240,25 @@ $checked_options = explode(',', $record['want_to_do']);
       <input type="hidden" name="id" value="<?= $record['id']?>">
     </fieldset>
   </form>
-
+<footer>
+  <div class="footerMenuList">
+    <div>
+      <a href="index.php" class="btn"><img src="images/home.png" alt="ホームのアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="input.php" class="btn"><img src="images/memo.png" alt="入力のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="articles.php" class="btn"><img src="images/book.png" alt="記事のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <img src="images/ouen.png" alt="応援のアイコン" width="60px">
+    </div>
+  </div>
+</footer>
 </body>
 
 </html>
