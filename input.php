@@ -1,12 +1,10 @@
 <?php
-session_start();
-include('funcs.php');
-include('env.php');
-check_session_id();
-
+include 'anon_session.php';
+include_once 'funcs.php';
+include 'env.php';
 
 // やりたいことの選択肢
-$options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲーム','手芸','読書','料理'];
+$options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','ぼーっとする','ゲーム','手芸','読書','料理'];
 ?>
 
 <!DOCTYPE html>
@@ -14,11 +12,25 @@ $options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲ�
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日々のきろく</title>
+  <title>Wellnoa -記録画面</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
   <style>
     body {
       background: #f5f5f5;
-      padding: 20px;
+    }
+    header {
+      background: #a7d7c5;
+      padding: 1.5em;
+      text-align: center;
+    }
+    header img {
+      align-items: center;
+      mix-blend-mode: multiply;
+    }
+    p.tagline {
+      font-size: 1.2em;
+      color: #555;
     }
     .form-row {
       display: flex;
@@ -121,29 +133,51 @@ $options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲ�
     a:hover {
       text-decoration: underline;
     }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .footerMenuList {
+      background-color: #a7d7c5;
+      padding: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn{
+      display: inline-block;
+    }
+    .btn img{
+      display: block;
+    }
   </style>
 </head>
 <body>
+<?php $flash = pop_flash(); ?>
+<?php if ($flash): ?>
+  <div class="flash <?= h($flash['type']) ?>" id="flashBox">
+    <?= h($flash['message']) ?>
+  </div>
+  <script>
+    // 2.0秒でフェードアウト→消す
+    setTimeout(() => {
+      const box = document.getElementById('flashBox');
+      if (!box) return;
+      box.style.opacity = '0';
+      setTimeout(() => box.remove(), 400); // フェード後にDOMから消す
+    }, 2000);
+  </script>
+<?php endif; ?>
+<header>
+  <img src="images/title_logo.png" alt="アプリロゴ画像" width="380px">
+  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
+</header>
   <form action="create.php" method="POST">
     <fieldset>
-      <legend>日々のきろく</legend>
+      <legend>記録する</legend>
       <a href="read.php">今までのきろくを見る</a>
-      <a href="logout.php">ログアウトする</a>
 
       <input type="hidden" name="weather" id="weather" />
-
-      <div class="form-row">
-        <label>記録の種類：</label>
-        <select name="record_type">
-          <option value="朝">朝のきろく</option>
-          <option value="夜">夜のきろく</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label>ニックネーム：</label>
-        <input type="text" name="nickname">
-      </div>
 
       <label>体の調子：</label>
       <div class="range">
@@ -159,11 +193,11 @@ $options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲ�
         <div class="range_good">良い</div>
       </div>
 
-      <label>やりたいこと / やったこと（複数選択可）：</label>
+      <label>やったこと（複数選択可）：</label>
       <div class="checkbox-group">
         <?php foreach($options as $opt): ?>
           <label>
-            <input type="checkbox" name="want_to_do[]" value="<?= $opt ?>"> <?= $opt ?>
+            <input type="checkbox" name="activity_type[]" value="<?= $opt ?>"> <?= $opt ?>
           </label>
         <?php endforeach; ?>
       </div>
@@ -174,6 +208,26 @@ $options = ['ストレッチ','お散歩','筋トレ','ぼーっとする','ゲ�
       <button type="submit">記録する</button>
     </fieldset>
   </form>
+
+<footer>
+  <div class="footerMenuList">
+    <div>
+      <a href="index.php" class="btn"><img src="images/home.png" alt="ホームのアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="articles.php" class="btn"><img src="images/book.png" alt="記事のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
+    </div>
+    <div>
+      <img src="images/ouen.png" alt="応援のアイコン" width="60px">
+    </div>
+    <div>
+      <a href="read.php" class="btn"><img src="images/calender.png" alt="カレンダーのアイコン" width="60px"></a>
+    </div>
+  </div>
+</footer>
 
   <script>
     // 天気をOpenWeather APIで取得してhiddenにセット

@@ -9,7 +9,7 @@ function h($str)
 //DB接続
 function db_conn()
 {
-    include "env.php";
+    require_once "env.php";
     // このコードを実行しているサーバー情報を取得して変数に保存
     $server_info = $_SERVER;
 
@@ -25,7 +25,7 @@ function db_conn()
 
     // サーバー情報の中のサーバの名前がlocalhostだった場合と本番だった場合で処理を分ける
     if ($server_info["SERVER_NAME"] == "localhost") {
-        $db_name = 'gs-deploy_kadai08_db1';          // データベース名
+        $db_name = 'wellnoa';          // データベース名
         $db_host = 'localhost';         // DBホスト
         $db_id   = 'root';              // アカウント名
         $db_pw   = '';                  // パスワード：XAMPPはパスワード無しに修正してください。
@@ -75,6 +75,18 @@ function check_admin()
     header('Location:login.php');
     exit();
   }
+}
+
+function set_flash(string $message, string $type='success'): void {
+  if (session_status() === PHP_SESSION_NONE) { session_start(); }
+  $_SESSION['flash'] = ['message' => $message, 'type' => $type];
+}
+function pop_flash(): ?array {
+  if (session_status() === PHP_SESSION_NONE) { session_start(); }
+  if (!isset($_SESSION['flash'])) return null;
+  $f = $_SESSION['flash'];
+  unset($_SESSION['flash']);
+  return $f;
 }
 
 ?>
