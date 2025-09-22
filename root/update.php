@@ -1,7 +1,7 @@
 <?php
 
-include 'anon_session.php';
-include_once 'funcs.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 if (
   !isset($_POST['log_date']) || $_POST['log_date'] === '' ||

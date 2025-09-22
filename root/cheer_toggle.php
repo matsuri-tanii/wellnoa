@@ -1,6 +1,6 @@
 <?php
-require_once 'anon_session.php';
-require_once 'funcs.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 

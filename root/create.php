@@ -1,6 +1,6 @@
 <?php
-include 'anon_session.php';
-include_once 'funcs.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 $anonymous_user_id = current_anon_user_id(); // 例: int を返す想定
 if (empty($anonymous_user_id)) {
