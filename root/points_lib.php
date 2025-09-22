@@ -1,6 +1,6 @@
 <?php
 // points_lib.php
-include_once 'funcs.php';
+require_once __DIR__ . '/funcs.php';
 
 function calc_points_for_user(PDO $pdo, $uid): array {
   $cfg = require __DIR__ . '/points_config.php';

@@ -1,6 +1,6 @@
 <?php
-include 'anon_session.php';
-include_once 'funcs.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 // DB接続
 $pdo = db_conn();

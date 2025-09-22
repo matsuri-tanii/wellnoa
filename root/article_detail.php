@@ -1,5 +1,5 @@
 <?php
-include_once 'funcs.php';
+require_once __DIR__ . '/funcs.php';
 $pdo = db_conn();
 
 // GETでarticle_idを受け取る

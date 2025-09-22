@@ -1,7 +1,7 @@
 <?php
-include 'anon_session.php';
-include_once 'funcs.php';
-include 'points_lib.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
+require_once __DIR__ . '/points_lib.php';
 
 $pdo = db_conn();
 $uid = current_anon_user_id();

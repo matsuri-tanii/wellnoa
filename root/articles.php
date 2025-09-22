@@ -1,6 +1,6 @@
 <?php
-include_once 'funcs.php';
-include 'anon_session.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 $pdo = db_conn();
 $uid = (int) current_anon_user_id();   // 念のため数値化

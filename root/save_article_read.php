@@ -1,6 +1,6 @@
 <?php
-require_once 'anon_session.php';
-include_once 'funcs.php';
+require_once __DIR__ . '/anon_session.php';
+require_once __DIR__ . '/funcs.php';
 
 if (!isset($_POST['article_id']) || $_POST['article_id'] === '') {
   exit('paramError');
