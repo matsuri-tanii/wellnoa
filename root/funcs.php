@@ -9,7 +9,7 @@ function h($str)
 //DB接続
 function db_conn()
 {
-    require_once "env.php";
+    require_once __DIR__ . '/env.php';
     // このコードを実行しているサーバー情報を取得して変数に保存
     $server_info = $_SERVER;
 
