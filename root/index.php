@@ -132,6 +132,7 @@ $activityCounts = array_column($rows, 'cnt');
   </div>
 
 </div>
+<div class="page-bottom-spacer"></div>
 
 <footer>
   <div class="footerMenuList">

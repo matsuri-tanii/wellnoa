@@ -240,6 +240,7 @@ $checked_options = explode(',', $record['activity_type']);
       <input type="hidden" name="id" value="<?= $record['id']?>">
     </fieldset>
   </form>
+  <div class="page-bottom-spacer"></div>
 <footer>
   <div class="footerMenuList">
     <div>
@@ -255,10 +256,11 @@ $checked_options = explode(',', $record['activity_type']);
       <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
     </div>
     <div>
-      <img src="images/ouen.png" alt="応援のアイコン" width="60px">
+      <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援" width="60"></a>
     </div>
   </div>
 </footer>
+<script src="js/main.js"></script>
 </body>
 
 </html>
