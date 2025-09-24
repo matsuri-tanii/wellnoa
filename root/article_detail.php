@@ -31,6 +31,23 @@ if ($status === false) {
   <style>
     body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
     img { max-width: 100%; height: auto; }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .footerMenuList {
+      background-color: #a7d7c5;
+      padding: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn{
+      display: inline-block;
+    }
+    .btn img{
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -58,83 +75,43 @@ if ($status === false) {
 }
 </style>
 
-  <h1><?= h($article['title']) ?></h1>
-  <p><em>カテゴリ：<?= h($article['category']) ?> ｜ 作成日：<?= h($article['published_at']) ?><?php if (!empty($article['source_name'])): ?> ｜ 出典: <?= h($article['source_name']) ?><?php endif; ?></em></p>
-  <?php if (!empty($article['thumbnail_url'])): ?>
-    <img src="<?= h($article['thumbnail_url']) ?>" alt="thumbnail">
-  <?php endif; ?>
-  <p><?= nl2br(h($article['description'])) ?></p>
-  <div class="ext">
-  <?php if (!empty($article['url'])): ?>
-    <a class="btn" href="<?= h($article['url']) ?>" target="_blank" rel="noopener">
-      元記事<?= !empty($article['source_name']) ? '（'.h($article['source_name']).'）' : '' ?>を開く
-    </a>
-  <?php endif; ?>
-</div>
+<header class="app-header">
+    <img class="app-logo" src="images/title_logo.png" alt="Wellnoa" width="320">
+    <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
+  </header>
 
-  <div id="bottom"></div>
+  <main class="container article-main">
+    <h1><?= h($article['title']) ?></h1>
+    <p class="article-meta">
+      カテゴリ：<?= h($article['category']) ?> ｜ 公開日：<?= h($article['published_at']) ?>
+      <?php if (!empty($article['source_name'])): ?>
+        ｜ 出典：<?= h($article['source_name']) ?>
+      <?php endif; ?>
+    </p>
+    <?php if (!empty($article['thumbnail_url'])): ?>
+      <img class="article-thumb" src="<?= h($article['thumbnail_url']) ?>" alt="">
+    <?php endif; ?>
+    <p><?= nl2br(h($article['description'])) ?></p>
 
-  <script>
-  function showToast(msg){
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => {
-      el.classList.remove('show');
-      setTimeout(() => { el.style.display='none'; }, 300);
-    }, 1800);
-    el.style.display='block';
-  }
-  
-  let sent = false;
+    <?php if (!empty($article['url'])): ?>
+      <p><a class="btn btn-outline" href="<?= h($article['url']) ?>" target="_blank" rel="noopener">
+        元記事<?= !empty($article['source_name']) ? '（'.h($article['source_name']).'）' : '' ?>を開く
+      </a></p>
+    <?php endif; ?>
 
-  function postRead(articleId) {
-    const params = new URLSearchParams();
-    params.append('article_id', articleId);
+    <!-- スクロール判定スペーサ -->
+    <div id="bottom" class="page-bottom-spacer"></div>
+  </main>
 
-    fetch('save_article_read.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    })
-    .then(r => r.text())
-    .then(t => console.log('読了記録:', t))
-    .catch(e => console.error('読了送信エラー', e));
-  }
+  <footer class="app-footer">
+    <a href="index.php" class="btn"><img src="images/home.png"   alt="ホーム" width="48"></a>
+    <a href="input.php" class="btn"><img src="images/memo.png"   alt="入力"   width="48"></a>
+    <a href="articles.php" class="btn"><img src="images/book.png" alt="記事"   width="48"></a>
+    <a href="points.php" class="btn"><img src="images/plants.png" alt="成長"   width="48"></a>
+    <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="みんな" width="48"></a>
+    <a href="read.php" class="btn"><img src="images/calender.png" alt="記録一覧" width="48"></a>
+  </footer>
 
-  window.addEventListener('scroll', () => {
-    const bottom = document.getElementById('bottom').getBoundingClientRect().top;
-    if (bottom < window.innerHeight && !sent) {
-      sent = true;
-      fetch('save_article_read.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({ article_id: <?= json_encode($id) ?> })
-      })
-      .then(res => res.text())
-      .then(text => {
-        if (text.trim() === 'OK' || text.includes('already')) {
-          showToast('読了を記録しました');
-        } else {
-          showToast('読了記録に失敗しました');
-          console.log(text);
-        }
-      })
-      .catch(e => {
-        showToast('通信エラーが発生しました');
-        console.error(e);
-      });
-    }
-  });
-
-  // もし記事が短くてスクロール不要なら初回に即送る
-  window.addEventListener('load', () => {
-    const bottom = document.getElementById('bottom').getBoundingClientRect().top;
-    if (bottom <= window.innerHeight && !sent) {
-      sent = true;
-      postRead(<?= (int)$id ?>);
-    }
-  });
-</script>
+  <script src="js/article-read.js"></script>
 </body>
 </html>

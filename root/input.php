@@ -208,6 +208,7 @@ $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','�
       <button type="submit">記録する</button>
     </fieldset>
   </form>
+  <div class="page-bottom-spacer"></div>
 
 <footer>
   <div class="footerMenuList">
@@ -221,7 +222,7 @@ $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','�
       <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
     </div>
     <div>
-      <img src="images/ouen.png" alt="応援のアイコン" width="60px">
+      <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援" width="60"></a>
     </div>
     <div>
       <a href="read.php" class="btn"><img src="images/calender.png" alt="カレンダーのアイコン" width="60px"></a>
@@ -229,14 +230,6 @@ $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','�
   </div>
 </footer>
 
-  <script>
-    // 天気をOpenWeather APIで取得してhiddenにセット
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=<?= OPENWEATHER_API_KEY ?>&lang=ja&units=metric`)
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('weather').value = data.weather[0].description;
-    })
-    .catch(error => console.error('天気取得エラー:', error));
-  </script>
+  <script src="js/main.js"></script>
 </body>
 </html>
