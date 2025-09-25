@@ -74,11 +74,10 @@ jobs:
           - **/Thumbs.db
           EOF
 
-      - name: Rsync to remote (safe: no --delete)
+      - name: 📤 Rsync to remote (safe: no --delete)
         run: |
           set -euo pipefail
-          CLEAN_REMOTE_PATH="$(echo "${REMOTE_PATH}" | sed 's:/*$::')"
-          DEST="${SSH_USER}@${SSH_HOST}:${CLEAN_REMOTE_PATH}/"
+          DEST="${SSH_USER}@${SSH_HOST}:${REMOTE_PATH%/}/"
           echo "Sync to ${DEST}"
           rsync -az \
             --filter='merge .rsync-filter' \
