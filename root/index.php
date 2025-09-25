@@ -84,7 +84,7 @@ $activityCounts = array_column($rows, 'cnt');
 
 <header>
   <img src="images/title_logo.png" alt="アプリロゴ画像" width="380">
-  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
+  <p class="tagline">あなたの健康へ、ちいさな一歩をー。</p>
 </header>
 
 <div class="container">
