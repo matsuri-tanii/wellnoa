@@ -28,7 +28,7 @@ jobs:
         with:
           # 初回は --dry-run を付けると挙動確認だけできます（OKなら外す）
           switches: -avzr --delete --exclude "env.php" --exclude ".git" --exclude ".github" --exclude "node_modules"
-          path: ./                 # ← リポジトリ直下を配布（root/配下なら ./root/ に変更）
+          path: ./root/                 # ← リポジトリ直下を配布
           remote_path: ${{ secrets.DEPLOY_PATH }}   # ← /home/wellnoa/www にしておく
           remote_host: ${{ secrets.SSH_HOST }}
           remote_user: ${{ secrets.SSH_USER }}
