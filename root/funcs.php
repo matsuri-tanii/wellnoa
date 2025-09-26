@@ -9,7 +9,20 @@ function h($str)
 //DB接続
 function db_conn()
 {
-    require_once __DIR__ . '/../secure/env.php';
+    $envCandidates = [
+      __DIR__ . '/../secure/env.php', // 本番（サーバー）
+      __DIR__ . '/env.php',     // ローカル（XAMPP）
+    ];
+
+    $loaded = false;
+    foreach ($envCandidates as $p) {
+      if (is_file($p)) { require_once $p; $loaded = true; break; }
+    }
+    if (!$loaded) {
+      http_response_code(500);
+      echo "Config file not found. Looking for:\n" . implode("\n", $envCandidates);
+      exit;
+    }
     // このコードを実行しているサーバー情報を取得して変数に保存
     $server_info = $_SERVER;
 
