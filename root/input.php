@@ -1,5 +1,18 @@
 <?php
-require_once __DIR__ . '/../secure/env.php';
+$envCandidates = [
+  __DIR__ . '/../secure/env.php', // 本番（サーバー）
+  __DIR__ . '/env.php',     // ローカル（XAMPP）
+];
+
+$loaded = false;
+foreach ($envCandidates as $p) {
+  if (is_file($p)) { require_once $p; $loaded = true; break; }
+}
+if (!$loaded) {
+  http_response_code(500);
+  echo "Config file not found. Looking for:\n" . implode("\n", $envCandidates);
+  exit;
+}
 require_once __DIR__ . '/anon_session.php';
 require_once __DIR__ . '/funcs.php';
 
