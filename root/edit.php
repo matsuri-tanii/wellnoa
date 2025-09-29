@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','ぼーっとする','ゲーム','手芸','読書','料理'];
 

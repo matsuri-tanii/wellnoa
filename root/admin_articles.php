@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/admin_auth.php';
 require_admin();
-require_once __DIR__ . '/funcs.php'; // db_conn(), h()
+require_once __DIR__.'/funcs.php'; adopt_incoming_code(); // db_conn(), h()
 $pdo = db_conn();
 
 /* ------------ アクション処理（POST） ------------ */

@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/env.php';
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__ . '/secure/env.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $gid = isset($_GET['gid']) ? (string)$_GET['gid'] : current_anon_user_id();
 if (!defined('BASE_URL')) {

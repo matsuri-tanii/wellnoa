@@ -1,7 +1,7 @@
 <?php
 // 管理画面用ガード（全ての admin_* ページの先頭で include ）
 session_start();
-require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/secure/env.php';
 
 if (
   !isset($_SESSION['admin_login']) ||

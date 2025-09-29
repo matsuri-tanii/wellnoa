@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 require_once __DIR__.'/points_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
