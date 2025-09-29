@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/admin_guard.php';
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $pdo = db_conn();
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;

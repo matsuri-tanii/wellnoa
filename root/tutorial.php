@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 // ?code=xxxx で来たらそのコードを採用してクッキーに上書き
 $incoming = isset($_GET['code']) ? preg_replace('/[^a-z0-9]/','', strtolower((string)$_GET['code'])) : '';

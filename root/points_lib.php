@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 /**
  * 匿名利用者の累計行動を anonymous_users テーブルに記録するユーティリティ。

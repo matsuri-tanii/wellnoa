@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 if (
   !isset($_POST['log_date']) || $_POST['log_date'] === '' ||

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/secure/env.php';
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

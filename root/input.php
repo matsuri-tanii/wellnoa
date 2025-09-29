@@ -1,8 +1,9 @@
 <?php
 $envCandidates = [
   __DIR__ . '/../secure/env.php', // 本番（サーバー）
-  __DIR__ . '/env.php',     // ローカル（XAMPP）
+  __DIR__ . '/secure/env.php',     // ローカル（XAMPP）
 ];
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $loaded = false;
 foreach ($envCandidates as $p) {
@@ -13,8 +14,7 @@ if (!$loaded) {
   echo "Config file not found. Looking for:\n" . implode("\n", $envCandidates);
   exit;
 }
-require_once __DIR__ . '/anon_session.php';
-require_once __DIR__ . '/funcs.php';
+
 $pdo = db_conn();
 
 $gid = current_guest_id();
