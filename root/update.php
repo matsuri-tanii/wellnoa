@@ -1,6 +1,4 @@
 <?php
-
-require_once __DIR__ . '/anon_session.php';
 require_once __DIR__ . '/funcs.php';
 
 if (

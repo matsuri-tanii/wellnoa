@@ -1,105 +1,100 @@
 <?php
+// funcs.php — 共通関数
+// ---------------------------------------------------------------
 
-//XSS対応（ echoする場所で使用！それ以外はNG ）
-function h($str)
-{
-    return htmlspecialchars($str, ENT_QUOTES);
+declare(strict_types=1);
+
+session_start();
+
+// タイムゾーン
+date_default_timezone_set('Asia/Tokyo');
+
+// セッション開始（多重開始エラー回避）
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-//DB接続
-function db_conn()
-{
-    $envCandidates = [
-      __DIR__ . '/../secure/env.php', // 本番（サーバー）
-      __DIR__ . '/env.php',     // ローカル（XAMPP）
-    ];
-
-    $loaded = false;
-    foreach ($envCandidates as $p) {
-      if (is_file($p)) { require_once $p; $loaded = true; break; }
+// ---------------------------------------------------------------
+// 匿名ユーザーID（6桁の数字）をセッションで保証
+// ---------------------------------------------------------------
+function current_anon_user_id(): int {
+    if (!isset($_SESSION['anonymous_user_id'])) {
+        $_SESSION['anonymous_user_id'] = random_int(100000, 999999);
     }
-    if (!$loaded) {
-      http_response_code(500);
-      echo "Config file not found. Looking for:\n" . implode("\n", $envCandidates);
-      exit;
+    return (int) $_SESSION['anonymous_user_id'];
+}
+
+// ---------------------------------------------------------------
+// env.php 読み込み（ローカル／本番両対応）
+// ---------------------------------------------------------------
+$envCandidates = [
+    __DIR__ . '/../secure/env.php',   // ローカル（wellnoa/root/secure/env.php）
+    __DIR__ . '/secure/env.php',      // 念のため
+    '/home/wellnoa/secure/env.php',   // さくら本番
+];
+$envLoaded = false;
+foreach ($envCandidates as $p) {
+    if (is_readable($p)) {
+        require_once $p;
+        $envLoaded = true;
+        break;
     }
-    // このコードを実行しているサーバー情報を取得して変数に保存
-    $server_info = $_SERVER;
+}
+if (!$envLoaded) {
+    throw new RuntimeException("secure/env.php が見つかりません。");
+}
 
-    // 変数の箱だけ先に用意
-    $db_name;
-    $db_host;
-    $db_id;
-    $db_pw;
-
-    // env.phpからデータのオブジェクトを取得
-    $sakura_db_info = sakura_db_info();
-
-
-    // サーバー情報の中のサーバの名前がlocalhostだった場合と本番だった場合で処理を分ける
-    if ($server_info["SERVER_NAME"] == "localhost") {
-        $db_name = 'wellnoa';          // データベース名
-        $db_host = 'localhost';         // DBホスト
-        $db_id   = 'root';              // アカウント名
-        $db_pw   = '';                  // パスワード：XAMPPはパスワード無しに修正してください。
-    } else {
-        // 連想配列の情報変数に格納
-        $db_name =  $sakura_db_info["db_name"];    //データベース名
-        $db_host =  $sakura_db_info["db_host"];    //DBホスト
-        $db_id =    $sakura_db_info["db_id"];      //アカウント名(登録しているドメイン)
-        $db_pw =    $sakura_db_info["db_pw"];      //さくらサーバのパスワード
-    }
-
+// ---------------------------------------------------------------
+// DB接続（PDO）
+// ---------------------------------------------------------------
+function db_conn(): PDO {
     try {
-        $server_info ='mysql:dbname='.$db_name.';charset=utf8;host='.$db_host;
-        $pdo = new PDO($server_info, $db_id, $db_pw);
-
-        return $pdo;
+        // env.php 内の sakura_db_info() を呼び出し
+        $info = sakura_db_info();
+        $dsn = 'mysql:dbname='.$info['db_name'].';charset=utf8mb4;host='.$info['db_host'];
+        return new PDO($dsn, $info['db_id'], $info['db_pw'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]);
     } catch (PDOException $e) {
-        exit('DB Connection Error:' . $e->getMessage());
+        exit('DB Connection Error: ' . $e->getMessage());
     }
 }
 
+// ---------------------------------------------------------------
+// XSS対策用（出力時に利用）
+// ---------------------------------------------------------------
+if (!defined('ENT_QUOTES')) { define('ENT_QUOTES', 3); } // 一部古い環境対策
 
-//SQLエラー
-function sql_error($stmt)
-{
-    //execute（SQL実行時にエラーがある場合）
-    $error = $stmt->errorInfo();
-    exit('SQLError:' . $error[2]);
+function h(?string $s): string {
+    return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// ログイン状態のチェック関数
-function check_session_id()
-{
-  if (!isset($_SESSION["session_id"]) ||$_SESSION["session_id"] !== session_id()) {
-    header('Location:login.php');
-    exit();
-  } else {
-    session_regenerate_id(true);
-    $_SESSION["session_id"] = session_id();
-  }
-}
-
-function check_admin()
-{
-  //管理者じゃないユーザーは一覧画面に移動
-  if (!isset($_SESSION["is_admin"]) ||$_SESSION["is_admin"] !== 1) {
-    header('Location:login.php');
-    exit();
-  }
-}
-
+// ---------------------------------------------------------------
+// フラッシュメッセージ
+// ---------------------------------------------------------------
 function set_flash(string $message, string $type='success'): void {
-  if (session_status() === PHP_SESSION_NONE) { session_start(); }
-  $_SESSION['flash'] = ['message' => $message, 'type' => $type];
-}
-function pop_flash(): ?array {
-  if (session_status() === PHP_SESSION_NONE) { session_start(); }
-  if (!isset($_SESSION['flash'])) return null;
-  $f = $_SESSION['flash'];
-  unset($_SESSION['flash']);
-  return $f;
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    $_SESSION['_flash'] = ['type'=>$type, 'message'=>$message];
 }
 
+function get_flash(): ?array {
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    if (!empty($_SESSION['_flash'])) {
+        $f = $_SESSION['_flash'];
+        unset($_SESSION['_flash']);
+        return $f;
+    }
+    return null;
+}
+
+// ---------------------------------------------------------------
+// 既存コード互換: current_anon_code が呼ばれても動くようにする
+// ---------------------------------------------------------------
+if (!function_exists('current_anon_code')) {
+    function current_anon_code(): string {
+        // まずは簡易に「数値IDを文字列として返す」運用
+        return (string) current_anon_user_id();
+    }
+}
 ?>

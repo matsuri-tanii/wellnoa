@@ -3,6 +3,7 @@ $envCandidates = [
   __DIR__ . '/../secure/env.php', // 本番（サーバー）
   __DIR__ . '/env.php',     // ローカル（XAMPP）
 ];
+require_once __DIR__ . '/funcs.php';
 
 $loaded = false;
 foreach ($envCandidates as $p) {
@@ -13,11 +14,16 @@ if (!$loaded) {
   echo "Config file not found. Looking for:\n" . implode("\n", $envCandidates);
   exit;
 }
-require_once __DIR__ . '/anon_session.php';
-require_once __DIR__ . '/funcs.php';
 
 $pdo = db_conn();
 $uid = current_anon_user_id();
+
+$gid = current_guest_id();
+if (!$gid) {
+  $gid = ensure_anon_user($pdo, null);
+  set_guest_cookie($gid);
+}
+
 
 // ---------------------- データ集計 ----------------------
 
@@ -80,6 +86,13 @@ $stmt->execute();
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $activities = array_column($rows, 'activity_type');
 $activityCounts = array_column($rows, 'cnt');
+
+// ざっくり利用回数（例：日記+記事閲覧）
+$cnt1 = (int)$pdo->query("SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = ".(int)$gid)->fetchColumn();
+$cnt2 = (int)$pdo->query("SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = ".(int)$gid)->fetchColumn();
+$totalUse = $cnt1 + $cnt2;
+
+$showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -96,7 +109,24 @@ $activityCounts = array_column($rows, 'cnt');
 <header>
   <img src="images/title_logo.png" alt="アプリロゴ画像" width="380">
   <p class="tagline">あなたの健康へ、ちいさな一歩をー。</p>
+  <nav>
+      <ul>
+        <li><a href="input.php"><img src="images/memo.png" alt="入力"> 記録する</a></li>
+        <li><a href="read.php"><img src="images/calender.png" alt="記録"> 記録を見る</a></li>
+        <li><a href="articles.php"><img src="images/book.png" alt="記事"> 記事を読む</a></li>
+        <li><a href="points.php"><img src="images/plants.png" alt="成長"> 成長を見る</a></li>
+        <li><a href="read_all.php"><img src="images/ouen.png" alt="応援">応援する</a></li>
+      </ul>
+    </nav>
 </header>
+
+<?php if ($showRegisterBanner): ?>
+<div id="regBanner" style="background:#fffbe6;border:1px solid #ffe58f;padding:10px 12px;margin:12px 0;border-radius:8px;">
+  <strong>もっと便利に使うには登録がおすすめです。</strong>
+  <a href="register.php" class="btn">登録する</a>
+  <button onclick="document.getElementById('regBanner').style.display='none'; document.cookie='dismiss_reg=1; path=/; max-age=2592000'">閉じる</button>
+</div>
+<?php endif; ?>
 
 <div class="container">
 
@@ -145,6 +175,11 @@ $activityCounts = array_column($rows, 'cnt');
 </div>
 <div class="page-bottom-spacer"></div>
 
+<p style="margin:12px 0;">
+  <a href="qr.php">📱 自分の匿名ID用QRを表示</a> /
+  <a href="qr_bulk.php">🧾 配布用QRをまとめて作る</a>
+</p>
+
 <footer>
   <div class="footerMenuList">
     <a href="input.php" class="btn"><img src="images/memo.png" alt="入力" width="60"></a>
@@ -153,6 +188,9 @@ $activityCounts = array_column($rows, 'cnt');
     <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援" width="60"></a>
     <a href="read.php" class="btn"><img src="images/calender.png" alt="カレンダー" width="60"></a>
   </div>
+  <footer>
+    <p>&copy; 2025 Wellnoa</p>
+  </footer>
 </footer>
 
 <script>

@@ -1,0 +1,9 @@
+/* 記事一覧ページ専用の微調整 */
+.grid { margin-bottom: 120px; }
+
+.badges { margin-top: .5rem; display:flex; gap:.4rem; flex-wrap:wrap }
+.badge { display:inline-block; padding:.2rem .5rem; font-size:.78rem;
+  border-radius:999px; border:1px solid var(--border); background:#fff; }
+.badge-read   { border-color:#a7d7c5; color:#317a68; background:#e8f5f1; }
+.badge-unread { border-color:#cfd6dc; color:#667; }
+.badge-new    { border-color:#ffd166; color:#8a5a00; background:#fff6da; }
