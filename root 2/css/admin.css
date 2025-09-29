@@ -1,0 +1,5 @@
+/* 管理画面のテーブルやボタン配置など */
+.admin-header { display:flex; justify-content:space-between; align-items:center; margin: 1rem 0; }
+.admin-table  { width:100%; border-collapse: collapse; }
+.admin-table th, .admin-table td { border:1px solid var(--border); padding:.6rem; }
+.admin-actions { display:flex; gap:.5rem; }
