@@ -1,4 +1,12 @@
 <?php
+// --- TEMP DEBUG (remove before production) ---
+ini_set('log_errors', '1');
+ini_set('error_log', '/home/wellnoa/www/php_error.log');
+error_reporting(E_ALL);
+// 本番では画面に出さない
+ini_set('display_errors', '0');
+// --- /TEMP DEBUG ---
+
 // funcs.php — 共通関数
 // ---------------------------------------------------------------
 
