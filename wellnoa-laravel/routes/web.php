@@ -19,3 +19,7 @@ Route::post('/logs', [DailyLogController::class, 'store'])->name('logs.store');
 Route::get('/logs/{id}/edit', [DailyLogController::class, 'edit'])->name('logs.edit');
 Route::put('/logs/{id}', [DailyLogController::class, 'update'])->name('logs.update');
 Route::delete('/logs/{id}', [DailyLogController::class, 'destroy'])->name('logs.destroy');
+
+use App\Http\Controllers\WeatherController;
+
+Route::get('/api/weather', [WeatherController::class, 'current']);

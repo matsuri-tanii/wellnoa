@@ -1,11 +1,16 @@
 <?php
-require_once __DIR__ . '/anon_session.php';
 require_once __DIR__ . '/funcs.php';
 
 // DB接続
 $pdo = db_conn();
 
 $uid = current_anon_user_id();
+$gid = current_guest_id();
+if (!$gid) {
+  $gid = ensure_anon_user($pdo, null);
+  set_guest_cookie($gid);
+}
+
 
 // SQL作成&実行
 $sql = 'SELECT * FROM daily_logs WHERE anonymous_user_id = :uid ORDER BY log_date DESC, log_time DESC';

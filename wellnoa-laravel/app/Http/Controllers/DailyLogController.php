@@ -53,18 +53,24 @@ class DailyLogController extends Controller
         }
         $activityJoined = implode(',', $buf);
 
-        DailyLog::create([
-            'anonymous_user_id'  => $anonId,
-            'log_date'           => now()->toDateString(),
-            'log_time'           => now()->format('H:i:s'),
-            'weather'            => $v['weather'] ?? null,      // 文字列
-            'body_condition'     => $v['body']   ?? null,       // 0–100
-            'mental_condition'   => $v['mental'] ?? null,       // 0–100
-            'activity_type'      => $activityJoined ?: null,    // varchar(50)
-            'memo'               => $v['memo']   ?? null,
-        ]);
+        try {
+            DailyLog::create([
+                'anonymous_user_id'  => $anonId,
+                'log_date'           => now()->toDateString(),
+                'log_time'           => now()->format('H:i:s'),
+                'weather'            => $v['weather'] ?? null,      // 文字列
+                'body_condition'     => $v['body']   ?? null,       // 0–100
+                'mental_condition'   => $v['mental'] ?? null,       // 0–100
+                'activity_type'      => $activityJoined ?: null,    // varchar(50)
+                'memo'               => $v['memo']   ?? null,
+            ]);
 
-        return redirect()->route('logs.index')->with('success', '日記を登録しました！');
+            return redirect()->route('logs.index')->with('success', '日記を登録しました！');
+        } catch (\Throwable $e) {
+            // 何か例外が起きたら
+            return back()->withInput()->with('error', '登録に失敗しました。もう一度お試しください。');
+            // ↑ back() で同じフォームに戻る。入力値も保持（withInput）
+        }
     }
 
     public function edit(int $id)
@@ -90,6 +96,7 @@ class DailyLogController extends Controller
             'memo'            => ['nullable','string'],
         ]);
 
+        // activity_type の 50文字制限ロジック（省略：あなたの最新版のままでOK）
         $act = $v['activity_type'] ?? [];
         $act = array_values(array_filter(array_map('trim', $act), fn($s)=>$s!==''));
         $buf = []; $len = 0;
@@ -99,7 +106,8 @@ class DailyLogController extends Controller
         }
         $activityJoined = implode(',', $buf);
 
-        $log->update([
+        // 変更を適用（fill→isClean で「変更なし」を検出）
+        $log->fill([
             'weather'            => $v['weather'] ?? null,
             'body_condition'     => $v['body']   ?? null,
             'mental_condition'   => $v['mental'] ?? null,
@@ -107,16 +115,38 @@ class DailyLogController extends Controller
             'memo'               => $v['memo']   ?? null,
         ]);
 
+        if ($log->isClean()) {
+            // 値が一つも変わっていない → 情報メッセージ
+            return redirect()->route('logs.index')->with('info', '変更はありませんでした。');
+        }
+
+        $log->save();
+
         return redirect()->route('logs.index')->with('success', '日記を編集しました！');
     }
 
     public function destroy(Request $request, int $id)
     {
-        $log = DailyLog::findOrFail($id);
+        $log = DailyLog::find($id);
+
+        if (!$log) {
+            // レコード自体が見つからない → エラー
+            return redirect()->route('logs.index')->with('error', '対象データが見つかりませんでした。');
+        }
+
         $this->authorizeView($log);
-        $log->delete();
-        
-        return redirect()->route('logs.index')->with('success', '日記を削除しました！');
+
+        try {
+            $ok = $log->delete(); // bool が返る
+            if ($ok) {
+                return redirect()->route('logs.index')->with('success', '日記を削除しました！');
+            } else {
+                return redirect()->route('logs.index')->with('error', '削除に失敗しました…');
+            }
+        } catch (\Throwable $e) {
+            // 例外発生時（外部キー制約など）
+            return redirect()->route('logs.index')->with('error', '削除時にエラーが発生しました。');
+        }
     }
 
     private function authorizeView(DailyLog $log): void

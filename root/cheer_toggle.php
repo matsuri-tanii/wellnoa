@@ -1,46 +1,41 @@
 <?php
-require_once __DIR__ . '/anon_session.php';
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php';
+require_once __DIR__.'/points_lib.php';
 
-header('Content-Type: application/json; charset=UTF-8');
+header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_POST['log_id']) || $_POST['log_id'] === '') {
-  echo json_encode(['ok'=>false, 'error'=>'paramError']); exit;
+$me = current_anon_code();
+if ($me === '') {
+    http_response_code(400);
+    echo json_encode(['ok'=>false, 'error'=>'anon_code missing']);
+    exit;
 }
 
-$uid = (int) current_anon_user_id();
-$logId = (int) $_POST['log_id'];
+$article_id = isset($_POST['article_id']) ? (int)$_POST['article_id'] : 0;
+if ($article_id <= 0) {
+    http_response_code(400);
+    echo json_encode(['ok'=>false, 'error'=>'invalid article_id']);
+    exit;
+}
 
-$pdo = db_conn();
-$pdo->beginTransaction();
 try {
-  // まず挿入を試す（新規応援）
-  $sql = "INSERT INTO cheers (daily_log_id, anonymous_user_id, created_at)
-          VALUES (:log_id, :uid, NOW())";
-  $stmt = $pdo->prepare($sql);
-  $stmt->bindValue(':log_id', $logId, PDO::PARAM_INT);
-  $stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
-  $stmt->execute();
+    $pdo = db_conn();
+    // 既に押しているかを確認
+    $stmt = $pdo->prepare("SELECT id FROM cheers WHERE anon_code=:c AND article_id=:a");
+    $stmt->execute([':c'=>$me, ':a'=>$article_id]);
+    $row = $stmt->fetch();
 
-  $pdo->commit();
-  echo json_encode(['ok'=>true, 'status'=>'added']); // 応援を追加
-} catch (PDOException $e) {
-  // すでに応援済み（UNIQUE衝突）の場合は取消に切り替える
-  if ((int)$e->errorInfo[1] === 1062) { // duplicate
-    try {
-      $sql = "DELETE FROM cheers WHERE daily_log_id=:log_id AND anonymous_user_id=:uid";
-      $stmt = $pdo->prepare($sql);
-      $stmt->bindValue(':log_id', $logId, PDO::PARAM_INT);
-      $stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
-      $stmt->execute();
-      $pdo->commit();
-      echo json_encode(['ok'=>true, 'status'=>'removed']); // 応援を取り消し
-    } catch(PDOException $e2) {
-      $pdo->rollBack();
-      echo json_encode(['ok'=>false, 'error'=>'dbErrorDel']);
+    if ($row) {
+        $pdo->prepare("DELETE FROM cheers WHERE id=:id")->execute([':id'=>$row['id']]);
+        echo json_encode(['ok'=>true, 'cheered'=>false]);
+    } else {
+        $pdo->prepare("INSERT INTO cheers(anon_code, article_id, created_at) VALUES(:c,:a, NOW())")
+            ->execute([':c'=>$me, ':a'=>$article_id]);
+        // ポイント加算
+        add_point_for($me, 'cheer_send');
+        echo json_encode(['ok'=>true, 'cheered'=>true]);
     }
-  } else {
-    $pdo->rollBack();
-    echo json_encode(['ok'=>false, 'error'=>'dbErrorAdd']);
-  }
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok'=>false, 'error'=>$e->getMessage()]);
 }

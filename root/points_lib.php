@@ -1,75 +1,38 @@
 <?php
-// points_lib.php
-require_once __DIR__ . '/funcs.php';
+declare(strict_types=1);
+require_once __DIR__.'/funcs.php';
 
-function calc_points_for_user(PDO $pdo, $uid): array {
-  $cfg = require __DIR__ . '/points_config.php';
-  $actPts = $cfg['activity_points'];
-  $readPt = (int)$cfg['article_read_point'];
-  $levels = $cfg['level_thresholds'];
+/**
+ * 匿名利用者の累計行動を anonymous_users テーブルに記録するユーティリティ。
+ * もしテーブルが無い/使わない場合は呼ばなくてもOK。
+ */
+function add_point_for(string $anonCode, string $eventKey): void {
+    static $cfg = null;
+    if ($cfg === null) $cfg = require __DIR__.'/points_config.php';
 
-  // 1) 行動ログ（daily_logs） => activity_type を CSV で合計
-  $sql = 'SELECT activity_type FROM daily_logs WHERE anonymous_user_id = :uid';
-  $st  = $pdo->prepare($sql);
-  $st->bindValue(':uid', $uid, PDO::PARAM_INT);
-  $st->execute();
-  $activityTotal = 0;
+    $earn = $cfg['earn'][$eventKey] ?? 0;
+    if ($earn <= 0) return;
 
-  while ($row = $st->fetch(PDO::FETCH_ASSOC)) {
-    if (empty($row['activity_type'])) continue;
-    // "散歩,ストレッチ" のようなCSVを配列に
-    $items = array_map('trim', explode(',', $row['activity_type']));
-    foreach ($items as $item) {
-      if ($item === '') continue;
-      $activityTotal += $actPts[$item] ?? 0; // 未定義は0点
-    }
-  }
+    $pdo = db_conn();
+    // anonymous_users に anon_code が無ければ作成、あれば update
+    $pdo->exec("CREATE TABLE IF NOT EXISTS anonymous_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        anon_code VARCHAR(32) UNIQUE,
+        total_points INT DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-  // 2) 読了数（article_reads）
-  $sql = 'SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = :uid';
-  $st = $pdo->prepare($sql);
-  $st->bindValue(':uid', $uid, PDO::PARAM_INT);
-  $st->execute();
-  $readCount = (int)$st->fetchColumn();
-  $articleTotal = $readCount * $readPt;
+    $sql = "INSERT INTO anonymous_users(anon_code,total_points) VALUES(:c,:p)
+            ON DUPLICATE KEY UPDATE total_points = total_points + VALUES(total_points)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':c'=>$anonCode, ':p'=>$earn]);
+}
 
-  $total = $activityTotal + $articleTotal;
-
-  // 3) レベル判定（最大しきい値を超えたもの）
-  ksort($levels); // 念のため昇順
-  $currentLevelKey = 0;
-  $currentLevel = $levels[0];
-  foreach ($levels as $threshold => $meta) {
-    if ($total >= $threshold) {
-      $currentLevelKey = $threshold;
-      $currentLevel = $meta;
-    } else {
-      break;
-    }
-  }
-
-  // 次レベル
-  $keys = array_keys($levels);
-  sort($keys);
-  $nextKey = null;
-  foreach ($keys as $k) {
-    if ($k > $currentLevelKey) { $nextKey = $k; break; }
-  }
-
-  $progress = [
-    'current_threshold' => $currentLevelKey,
-    'next_threshold'    => $nextKey,
-    'in_level_points'   => $total - $currentLevelKey,
-    'to_next'           => $nextKey ? ($nextKey - $total) : 0,
-    'ratio'             => ($nextKey ? ($total - $currentLevelKey) / ($nextKey - $currentLevelKey) : 1.0)
-  ];
-
-  return [
-    'total_points'    => $total,
-    'activity_points' => $activityTotal,
-    'article_points'  => $articleTotal,
-    'read_count'      => $readCount,
-    'level'           => $currentLevel, // ['code'=>'新緑','label'=>'新緑の景']
-    'progress'        => $progress,
-  ];
+function get_total_points(string $anonCode): int {
+    $pdo = db_conn();
+    $stmt = $pdo->prepare("SELECT total_points FROM anonymous_users WHERE anon_code=:c");
+    $stmt->execute([':c'=>$anonCode]);
+    $row = $stmt->fetch();
+    return (int)($row['total_points'] ?? 0);
 }
