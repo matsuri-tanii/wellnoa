@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $anonymous_user_id = current_anon_user_id(); // 例: int を返す想定
 if (empty($anonymous_user_id)) {

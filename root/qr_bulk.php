@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/env.php';
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__ . '/secure/env.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 if (!defined('BASE_URL')) {
     define('BASE_URL', (isset($_SERVER['HTTPS'])?'https':'http') . '://' . $_SERVER['HTTP_HOST']);

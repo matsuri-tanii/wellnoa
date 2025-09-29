@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 
 $pdo = db_conn();
 $uid = (int) current_anon_user_id();   // 念のため数値化

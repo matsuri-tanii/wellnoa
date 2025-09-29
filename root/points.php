@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/funcs.php';
+require_once __DIR__.'/funcs.php'; adopt_incoming_code();
 require_once __DIR__ . '/points_lib.php';
 
 $pdo = db_conn();
