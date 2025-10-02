@@ -22,7 +22,7 @@ for ($i = 0; $i < $count; $i++) {
     // $stmt = $pdo->prepare("INSERT IGNORE INTO anonymous_users (anonymous_id, created_at) VALUES (?, NOW())");
     // $stmt->execute([$gid]);
 
-    $target = BASE_URL . '/input.php?gid=' . rawurlencode((string)$gid);
+    $target = BASE_URL . '/landing.php?code=' . rawurlencode((string)$gid);
     $qrUrl  = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' . rawurlencode($target);
     $rows[] = ['gid'=>$gid, 'target'=>$target, 'qr'=>$qrUrl];
 }

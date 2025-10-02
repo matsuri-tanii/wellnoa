@@ -8,7 +8,7 @@ if (!defined('BASE_URL')) {
 }
 
 // チュートリアルや初回導線に飛ばしたい場合：/input.php?gid=... を基本に
-$target = BASE_URL . '/input.php?gid=' . rawurlencode((string)$gid);
+$target = BASE_URL . '/landing.php?code=' . rawurlencode((string)$gid);
 
 // 無料のQR生成サービス（png直リンク）
 $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . rawurlencode($target);
