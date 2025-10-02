@@ -1,41 +1,63 @@
 <?php
-require_once __DIR__.'/funcs.php'; adopt_incoming_code();
-require_once __DIR__.'/points_lib.php';
+require_once __DIR__ . '/funcs.php';
+adopt_incoming_code(); // QRで来たコードをクッキー採用（存在すれば）
 
 header('Content-Type: application/json; charset=utf-8');
 
-$me = current_anon_code();
-if ($me === '') {
-    http_response_code(400);
-    echo json_encode(['ok'=>false, 'error'=>'anon_code missing']);
-    exit;
-}
-
-$article_id = isset($_POST['article_id']) ? (int)$_POST['article_id'] : 0;
-if ($article_id <= 0) {
-    http_response_code(400);
-    echo json_encode(['ok'=>false, 'error'=>'invalid article_id']);
-    exit;
-}
-
 try {
+    // ログイン相当（匿名ユーザーID）
+    $uid = current_anon_user_id();
+    if (!$uid) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'anonymous_user_id missing']);
+        exit;
+    }
+
+    // 入力取得（フロントは target_type / target_id を送っている）
+    $type = isset($_POST['target_type']) ? (string)$_POST['target_type'] : '';
+    $tid  = isset($_POST['target_id'])   ? (int)$_POST['target_id']   : 0;
+
+    // バリデーション
+    $type = strtolower($type);
+    if (!in_array($type, ['daily', 'read'], true) || $tid <= 0) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'invalid target_type or target_id']);
+        exit;
+    }
+
     $pdo = db_conn();
-    // 既に押しているかを確認
-    $stmt = $pdo->prepare("SELECT id FROM cheers WHERE anon_code=:c AND article_id=:a");
-    $stmt->execute([':c'=>$me, ':a'=>$article_id]);
+
+    // 既に自分が応援しているか？
+    $sql = "SELECT id FROM cheers WHERE anonymous_user_id = :uid AND target_type = :tt AND target_id = :tid LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':uid' => $uid, ':tt' => $type, ':tid' => $tid]);
     $row = $stmt->fetch();
 
     if ($row) {
-        $pdo->prepare("DELETE FROM cheers WHERE id=:id")->execute([':id'=>$row['id']]);
-        echo json_encode(['ok'=>true, 'cheered'=>false]);
+        // 取り消し
+        $pdo->prepare("DELETE FROM cheers WHERE id = :id")->execute([':id' => $row['id']]);
+        $cheered = false;
     } else {
-        $pdo->prepare("INSERT INTO cheers(anon_code, article_id, created_at) VALUES(:c,:a, NOW())")
-            ->execute([':c'=>$me, ':a'=>$article_id]);
-        // ポイント加算
-        add_point_for($me, 'cheer_send');
-        echo json_encode(['ok'=>true, 'cheered'=>true]);
+        // 追加
+        $pdo->prepare("
+            INSERT INTO cheers(anonymous_user_id, target_type, target_id, created_at)
+            VALUES (:uid, :tt, :tid, NOW())
+        ")->execute([':uid' => $uid, ':tt' => $type, ':tid' => $tid]);
+
+        // ※ポイント連動をしたい場合は points_lib.php の呼び出しをここで。
+        // require_once __DIR__.'/points_lib.php';
+        // add_point_for((string)$uid, 'cheer_send');
+
+        $cheered = true;
     }
+
+    // 最新の合計カウントを返す
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS c FROM cheers WHERE target_type = :tt AND target_id = :tid");
+    $stmt->execute([':tt' => $type, ':tid' => $tid]);
+    $count = (int)($stmt->fetchColumn() ?: 0);
+
+    echo json_encode(['ok' => true, 'cheered' => $cheered, 'count' => $count]);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['ok'=>false, 'error'=>$e->getMessage()]);
+    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }
