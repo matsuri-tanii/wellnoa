@@ -2,10 +2,19 @@
 declare(strict_types=1);
 
 /**
- * secure/env.php を探して読み込む
- * - ローカル:   __DIR__.'/../secure/env.php'
- * - 本番(さくら): '/home/wellnoa/secure/env.php'
+ * funcs.php — 共通ユーティリティ（決定版）
+ * - env.php 自動読込（ローカル/本番）
+ * - セッション/タイムゾーン初期化
+ * - DB接続, XSSエスケープ, フラッシュ, 匿名ID(anon_code)管理
+ * - 旧コード互換: ensure_anon_user(), set_guest_cookie()
+ * - ヘッダー用: is_unregistered_mode(), pop_action_hint()
  */
+
+/* ----------------------------------------------------------------
+ * env.php を探して読み込む
+ *  - ローカル:   __DIR__.'/../secure/env.php'
+ *  - 本番(さくら): '/home/wellnoa/secure/env.php'
+ * -------------------------------------------------------------- */
 $__env_paths = [
     __DIR__ . '/../secure/env.php',
     '/home/wellnoa/secure/env.php',
@@ -20,35 +29,40 @@ foreach ($__env_paths as $p) {
     }
 }
 if (!$__env_loaded) {
-    // ログだけ残し、ユーザーには短いエラー
+    // ログを残し、ユーザーには短いメッセージ
     @ini_set('log_errors', '1');
-    @ini_set('error_log', __DIR__ . '/_logs/php_errors.log');
-    if (!is_dir(__DIR__ . '/_logs')) @mkdir(__DIR__ . '/_logs', 0775, true);
+    $logDir = __DIR__ . '/_logs';
+    if (!is_dir($logDir)) @mkdir($logDir, 0775, true);
+    @ini_set('error_log', $logDir . '/php_errors.log');
     error_log('env.php missing. tried: ' . implode(' | ', array_filter($__env_paths)));
     http_response_code(500);
     exit('env.php missing');
 }
 
-/* ---- 共通初期化 ---- */
+/* ----------------------------------------------------------------
+ * 共通初期化
+ * -------------------------------------------------------------- */
 date_default_timezone_set('Asia/Tokyo');
 if (session_status() === PHP_SESSION_NONE) {
-    session_start(); // フラッシュメッセージ等で利用
+    session_start();
 }
 
-/* ---- ユーティリティ ---- */
+/* ----------------------------------------------------------------
+ * ユーティリティ
+ * -------------------------------------------------------------- */
 function h(?string $s): string {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
+/** BASE_URL があれば優先、なければ現在ホストから作る */
 function base_url(): string {
-    if (defined('BASE_URL') && BASE_URL) {
-        return rtrim(BASE_URL, '/');
-    }
+    if (defined('BASE_URL') && BASE_URL) return rtrim(BASE_URL, '/');
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
     return $scheme . '://' . $host;
 }
 
+/** 相対でも絶対でもOKなリダイレクト */
 function redirect(string $pathOrUrl, int $code = 302): never {
     if (!preg_match('~^https?://~i', $pathOrUrl)) {
         $pathOrUrl = base_url() . '/' . ltrim($pathOrUrl, '/');
@@ -57,13 +71,20 @@ function redirect(string $pathOrUrl, int $code = 302): never {
     exit;
 }
 
-/* ---- DB接続 ---- */
+/** URL生成（お好みで） */
+function url(string $path = ''): string {
+    return base_url() . '/' . ltrim($path, '/');
+}
+
+/* ----------------------------------------------------------------
+ * DB接続
+ * -------------------------------------------------------------- */
 function db_conn(): PDO {
     if (!function_exists('sakura_db_info')) {
         throw new RuntimeException('sakura_db_info() が env.php にありません。');
     }
     $i = sakura_db_info();
-    $dsn  = 'mysql:host=' . $i['db_host'] . ';dbname=' . $i['db_name'] . ';charset=utf8mb4';
+    $dsn  = 'mysql:host='.$i['db_host'].';dbname='.$i['db_name'].';charset=utf8mb4';
     $user = $i['db_id'];
     $pass = $i['db_pw'];
     return new PDO($dsn, $user, $pass, [
@@ -73,11 +94,21 @@ function db_conn(): PDO {
     ]);
 }
 
-/* ---- フラッシュメッセージ ---- */
+/** SQLエラーを例外化（必要箇所で使用） */
+function sql_error(PDOStatement $stmt): never {
+    $info = $stmt->errorInfo(); // [SQLSTATE, driver_code, message]
+    throw new RuntimeException('SQL ERROR: ' . ($info[2] ?? 'unknown'));
+}
+
+/* ----------------------------------------------------------------
+ * フラッシュメッセージ
+ *  - set_flash('メッセージ', 'success|warning|error')
+ *  - $flash = pop_flash(); // 取り出して消す（['type','message']）
+ * -------------------------------------------------------------- */
 function set_flash(string $message, string $type = 'success'): void {
     $_SESSION['_flash'] = ['type' => $type, 'message' => $message];
 }
-function get_flash(): ?array {
+function pop_flash(): ?array {
     if (!empty($_SESSION['_flash'])) {
         $f = $_SESSION['_flash'];
         unset($_SESSION['_flash']);
@@ -86,10 +117,11 @@ function get_flash(): ?array {
     return null;
 }
 
-/* ---- 匿名コード（cookie: anon_code） ----
- * - 端末を跨いでも同一人物として扱いたい要件に対応
- * - 未設定なら 12桁HEX を自動発行
- */
+/* ----------------------------------------------------------------
+ * 匿名コード（Cookie: anon_code）
+ *  - 端末をまたいで同一人物として扱う用
+ *  - 未設定なら 12桁HEX を自動発行
+ * -------------------------------------------------------------- */
 function current_anon_code(): string {
     $code = $_COOKIE['anon_code'] ?? '';
     $code = strtolower(preg_replace('/[^a-z0-9]/', '', (string)$code));
@@ -100,26 +132,24 @@ function current_anon_code(): string {
             $code = substr(strtolower(md5(uniqid('', true))), 0, 12);
         }
         setcookie('anon_code', $code, [
-            'expires'  => time() + 60 * 60 * 24 * 365,
+            'expires'  => time() + 60*60*24*365,
             'path'     => '/',
             'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
             'httponly' => false,
             'samesite' => 'Lax',
         ]);
-        $_COOKIE['anon_code'] = $code; // 同一リクエストで参照可
+        $_COOKIE['anon_code'] = $code;
     }
     return $code;
 }
 
-/* ---- ?code=xxx を受けたときに cookie を上書きする補助 ----
- * 各ページの先頭で adopt_incoming_code(); を一行呼ぶだけでOK
- */
+/** ?code=xxx で来たら Cookie を上書き */
 function adopt_incoming_code(): void {
     if (!isset($_GET['code'])) return;
     $incoming = strtolower(preg_replace('/[^a-z0-9]/', '', (string)$_GET['code']));
     if ($incoming === '') return;
     setcookie('anon_code', $incoming, [
-        'expires'  => time() + 60 * 60 * 24 * 365,
+        'expires'  => time() + 60*60*24*365,
         'path'     => '/',
         'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
         'httponly' => false,
@@ -128,119 +158,110 @@ function adopt_incoming_code(): void {
     $_COOKIE['anon_code'] = $incoming;
 }
 
-/* ---- 互換：古いコードで呼ばれている関数名に合わせる ---- */
-if (!function_exists('current_guest_id')) {
-    function current_guest_id(): string { return current_anon_code(); }
-}
-if (!function_exists('current_anon_user_id')) {
-    // 互換用（必要なら6桁数値が欲しい場面で使う：anon_codeから決定的に生成）
-    function current_anon_user_id(): int {
-        $code = current_anon_code();
-        $n = hexdec(substr(md5($code), 0, 6)) % 900000 + 100000; // 100000〜999999
-        return $n;
-    }
-}
-
-if (!function_exists('sql_error')) {
-    function sql_error($stmt): void {
-        if ($stmt instanceof PDOStatement) {
-            $info = $stmt->errorInfo(); // [SQLSTATE, driver_code, message]
-            throw new RuntimeException('SQL ERROR: '.($info[2] ?? 'unknown'));
-        }
-        throw new RuntimeException('SQL ERROR (no statement)');
-    }
-}
-
-/** フラッシュを“取り出して消す”簡易API（古いテンプレ互換） */
-if (!function_exists('pop_flash')) {
-    function pop_flash(): ?array {
-        return get_flash();
-    }
-}
-/** 名前違いの互換（header.php などで使用） */
-if (!function_exists('pop_action_hint')) {
-    function pop_action_hint(): ?array {
-        return get_flash();
-    }
-}
-
-/** セッションに匿名ユーザーを必ず持たせる（旧 ensure_anon_user 互換） */
-if (!function_exists('ensure_anon_user')) {
-    function ensure_anon_user(): int {
-        return current_anon_user_id(); // 6桁数値を発行・保持
-    }
-}
-
-/** クッキーに匿名コードを保存（旧 set_guest_cookie 互換） */
-if (!function_exists('set_guest_cookie')) {
-    function set_guest_cookie(?string $code = null): void {
-        // 既定はセッションID（数値）を文字列化して使う
-        $val = $code ?? (string) current_anon_user_id();
-        setcookie('anon_code', $val, [
-            'expires'  => time() + 60*60*24*365,
-            'path'     => '/',
-            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-            'httponly' => false,
-            'samesite' => 'Lax',
-        ]);
-        $_COOKIE['anon_code'] = $val; // 直後のリクエストでも参照できるように
-    }
-}
-
-/** ポイント計算（points.php 互換）
- *  素朴な例: 記事既読=1pt, 日記=3pt, チア=1pt
- *  必要なら重みは調整してください
+/**
+ * 数値の匿名ID（旧コード互換が必要な場面向け）
+ * - anon_code から決定的に 100000〜999999 を生成
  */
-if (!function_exists('calc_points_for_user')) {
-    function calc_points_for_user(PDO $pdo, int $uid): array {
-        // article_reads: anonymous_user_id
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = :uid');
-        $stmt->execute([':uid'=>$uid]);
-        $reads = (int) $stmt->fetchColumn();
+function current_anon_user_id(): int {
+    $code = current_anon_code();
+    $n = hexdec(substr(md5($code), 0, 6)) % 900000 + 100000;
+    return $n;
+}
 
-        // daily_logs: anonymous_user_id
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = :uid');
-        $stmt->execute([':uid'=>$uid]);
-        $logs = (int) $stmt->fetchColumn();
+/** 旧：ensure_anon_user() 互換（呼ぶだけで数値IDが確実に使える） */
+function ensure_anon_user(): int {
+    return current_anon_user_id();
+}
 
-        // cheers: anonymous_user_id（存在しないなら0扱い）
-        try {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM cheers WHERE anonymous_user_id = :uid');
-            $stmt->execute([':uid'=>$uid]);
-            $cheers = (int) $stmt->fetchColumn();
-        } catch (Throwable $e) {
-            $cheers = 0;
+if (!function_exists('current_guest_id')) {
+    function current_guest_id(): string {
+        return current_anon_code(); // 旧名称の互換
+    }
+}
+
+/** 旧：set_guest_cookie() 互換（必要なら明示的にCookieへ書き込む） */
+function set_guest_cookie(?string $code = null): void {
+    $val = $code ?? (string)current_anon_user_id();
+    setcookie('anon_code', $val, [
+        'expires'  => time() + 60*60*24*365,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => false,
+        'samesite' => 'Lax',
+    ]);
+    $_COOKIE['anon_code'] = $val;
+}
+
+/* ----------------------------------------------------------------
+ * 未登録モード/登録誘導（ヘッダー用）
+ * -------------------------------------------------------------- */
+
+/** 未登録モードの簡易フラグを付ける（ランディングで“登録せずに使う”を選んだ時など） */
+function mark_unregistered_mode(): void {
+    setcookie('unregistered', '1', [
+        'expires'  => time() + 60*60*24*365, // 1年
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => false,
+        'samesite' => 'Lax',
+    ]);
+    $_COOKIE['unregistered'] = '1';
+}
+
+/** 未登録モード判定（将来は正式ログイン判定で置き換え可） */
+function is_unregistered_mode(): bool {
+    // 例：将来は $_SESSION['user_id'] 有無で判定
+    return isset($_COOKIE['unregistered']) && $_COOKIE['unregistered'] === '1';
+}
+
+/**
+ * 登録誘導ヒントを出すか？
+ * - 未登録モードの時のみ
+ * - きろく数 + 読了数 が 5 以上
+ * - 1日1回まで
+ */
+function pop_action_hint(): bool {
+    if (!is_unregistered_mode()) return false;
+
+    $today = date('Y-m-d');
+    if (($_SESSION['_hint_last_shown'] ?? '') === $today) return false;
+
+    try {
+        $pdo = db_conn();
+        $uid = current_anon_user_id();
+
+        $st1 = $pdo->prepare('SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = :uid');
+        $st1->execute([':uid'=>$uid]);
+        $logs = (int)$st1->fetchColumn();
+
+        $st2 = $pdo->prepare('SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = :uid');
+        $st2->execute([':uid'=>$uid]);
+        $reads = (int)$st2->fetchColumn();
+
+        if ($logs + $reads >= 5) {
+            $_SESSION['_hint_last_shown'] = $today;
+            return true;
         }
-
-        $points = $reads*1 + $logs*3 + $cheers*1;
-
-        return [
-            'reads'  => $reads,
-            'logs'   => $logs,
-            'cheers' => $cheers,
-            'total'  => $points,
-        ];
+    } catch (Throwable $e) {
+        // 失敗しても黙って非表示（致命的にしない）
     }
+    return false;
 }
 
-/** URLヘルパ（未定義警告の抑止と利便性） */
-if (!function_exists('base_url')) {
-    function base_url(): string {
-        if (defined('BASE_URL')) return rtrim(BASE_URL, '/');
-        $sch = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        return $sch.'://'.$host;
-    }
+function is_logged_in(): bool {
+  return !empty($_SESSION['user_id']);
 }
-if (!function_exists('url')) {
-    function url(string $path = ''): string {
-        return base_url().'/'.ltrim($path, '/');
-    }
+function current_user_id(): ?int {
+  return $_SESSION['user_id'] ?? null;
+}
+function require_login(): void {
+  if (!is_logged_in()) { redirect('login.php'); }
 }
 
-/* ---- 画面用の軽い通知（任意） ---- */
-function pop_action_hint(?string $msg): void {
-    if (!$msg) return;
-    echo '<div style="margin:12px 0;padding:10px;background:#F0FFF4;border:1px solid #9AE6B4;color:#22543D;border-radius:6px;">'
-       . h($msg) . '</div>';
+/** 登録直後・ログイン直後に、今の anon_code を自分にひも付け */
+function link_current_anon_to_user(PDO $pdo, int $userId): void {
+  $code = current_anon_code(); // いまのcookie
+  $sql = "INSERT IGNORE INTO user_anon_links(user_id, anon_code) VALUES(:uid, :code)";
+  $st  = $pdo->prepare($sql);
+  $st->execute([':uid'=>$userId, ':code'=>$code]);
 }

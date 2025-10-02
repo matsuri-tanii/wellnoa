@@ -1,8 +1,14 @@
 <?php
-require_once __DIR__ . '/admin_auth.php';
-require_admin();
+require_once __DIR__.'/admin_guard.php';
 require_once __DIR__.'/funcs.php'; adopt_incoming_code(); // db_conn(), h()
 $pdo = db_conn();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!admin_same_origin_check() || !admin_csrf_check($_POST['csrf'] ?? '')) {
+        http_response_code(400);
+        exit('Bad Request (CSRF)');
+    }
+}
 
 /* ------------ アクション処理（POST） ------------ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -117,6 +123,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="card-body">
       <form class="new-form" method="post">
         <input type="hidden" name="op" value="create">
+        <input type="hidden" name="csrf" value="<?= h(admin_csrf_token()) ?>">
         <div class="row"><label>タイトル</label><input type="text" name="title" required></div>
         <div class="row"><label>説明文</label><textarea name="description" rows="3"></textarea></div>
         <div class="row"><label>URL</label><input type="text" name="url"></div>
@@ -154,6 +161,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                   <input type="hidden" name="op" value="toggle">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
                   <input type="hidden" name="val" value="<?= ((int)$r['is_published'] === 1) ? 0 : 1 ?>">
+                  <input type="hidden" name="csrf" value="<?= h(admin_csrf_token()) ?>">
                   <button class="btn btn-outline" type="submit">
                     <?= ((int)$r['is_published'] === 1) ? '非公開にする' : '公開にする' ?>
                   </button>
@@ -162,6 +170,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <form class="inline" method="post" onsubmit="return confirm('削除してよろしいですか？');">
                   <input type="hidden" name="op" value="delete">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                  <input type="hidden" name="csrf" value="<?= h(admin_csrf_token()) ?>">
                   <button class="btn" type="submit">削除</button>
                 </form>
               </td>

@@ -39,19 +39,7 @@ $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','�
     body {
       background: #f5f5f5;
     }
-    header {
-      background: #a7d7c5;
-      padding: 1.5em;
-      text-align: center;
-    }
-    header img {
-      align-items: center;
-      mix-blend-mode: multiply;
-    }
-    p.tagline {
-      font-size: 1.2em;
-      color: #555;
-    }
+
     .form-row {
       display: flex;
       align-items: center;
@@ -173,82 +161,72 @@ $options = ['散歩','ジョギング','筋トレ','ストレッチ','ヨガ','�
   </style>
 </head>
 <body>
-<?php $flash = pop_flash(); ?>
-<?php if ($flash): ?>
-  <div class="flash <?= h($flash['type']) ?>" id="flashBox">
-    <?= h($flash['message']) ?>
-  </div>
-  <script>
-    // 2.0秒でフェードアウト→消す
-    setTimeout(() => {
-      const box = document.getElementById('flashBox');
-      if (!box) return;
-      box.style.opacity = '0';
-      setTimeout(() => box.remove(), 400); // フェード後にDOMから消す
-    }, 2000);
-  </script>
-<?php endif; ?>
-<header>
-  <img src="images/title_logo.png" alt="アプリロゴ画像" width="380px">
-  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
-</header>
-  <form action="create.php" method="POST">
-    <fieldset>
-      <legend>記録する</legend>
-      <a href="read.php">今までのきろくを見る</a>
+  <div class="layout">
+    <header class="site-header">
+      <?php require __DIR__.'/inc/header.php'; ?>
+    </header>
+    <!-- 2) サイドナビ（PC/タブ横のみCSSで表示） -->
+    <aside class="side-nav">
+      <nav>
+        <ul>
+          <li><a href="index.php"><img src="images/home.png" alt="ホーム">ホーム画面</a></li>
+          <li><a href="input.php"><img src="images/memo.png" alt="">記録する</a></li>
+          <li><a href="read.php"><img src="images/calender.png" alt="">記録を見る</a></li>
+          <li><a href="articles.php"><img src="images/book.png" alt="">記事を読む</a></li>
+          <li><a href="points.php"><img src="images/plants.png" alt="">成長を見る</a></li>
+          <li><a href="read_all.php"><img src="images/ouen.png" alt="">応援する</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-      <input type="hidden" name="weather" id="weather" />
+    <main class="main">
+      <form action="create.php" method="POST">
+        <fieldset>
+          <legend>記録する</legend>
+          <a href="read.php">今までのきろくを見る</a>
 
-      <label>体の調子：</label>
-      <div class="range">
-        <div class="range_bad">悪い</div>
-        <div class="range_input"><input type="range" name="body" min="0" max="100"></div>
-        <div class="range_good">良い</div>
-      </div>
+          <input type="hidden" name="weather" id="weather" />
 
-      <label>心の調子：</label>
-      <div class="range">
-        <div class="range_bad">悪い</div>
-        <div class="range_input"><input type="range" name="mental" min="0" max="100"></div>
-        <div class="range_good">良い</div>
-      </div>
+          <label>体の調子：</label>
+          <div class="range">
+            <div class="range_bad">悪い</div>
+            <div class="range_input"><input type="range" name="body" min="0" max="100"></div>
+            <div class="range_good">良い</div>
+          </div>
 
-      <label>やったこと（複数選択可）：</label>
-      <div class="checkbox-group">
-        <?php foreach($options as $opt): ?>
-          <label>
-            <input type="checkbox" name="activity_type[]" value="<?= $opt ?>"> <?= $opt ?>
-          </label>
-        <?php endforeach; ?>
-      </div>
+          <label>心の調子：</label>
+          <div class="range">
+            <div class="range_bad">悪い</div>
+            <div class="range_input"><input type="range" name="mental" min="0" max="100"></div>
+            <div class="range_good">良い</div>
+          </div>
 
-      <label>ひとこと：</label>
-      <textarea name="memo"></textarea>
+          <label>やったこと（複数選択可）：</label>
+          <div class="checkbox-group">
+            <?php foreach($options as $opt): ?>
+              <label>
+                <input type="checkbox" name="activity_type[]" value="<?= $opt ?>"> <?= $opt ?>
+              </label>
+            <?php endforeach; ?>
+          </div>
 
-      <button type="submit">記録する</button>
-    </fieldset>
-  </form>
-  <div class="page-bottom-spacer"></div>
+          <label>ひとこと：</label>
+          <textarea name="memo"></textarea>
 
-<footer>
-  <div class="footerMenuList">
-    <div>
-      <a href="index.php" class="btn"><img src="images/home.png" alt="ホームのアイコン" width="60px"></a>
-    </div>
-    <div>
-      <a href="articles.php" class="btn"><img src="images/book.png" alt="記事のアイコン" width="60px"></a>
-    </div>
-    <div>
-      <a href="points.php" class="btn"><img src="images/plants.png" alt="成長のアイコン" width="60px"></a>
-    </div>
-    <div>
-      <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援" width="60"></a>
-    </div>
-    <div>
-      <a href="read.php" class="btn"><img src="images/calender.png" alt="カレンダーのアイコン" width="60px"></a>
-    </div>
-  </div>
-</footer>
+          <button type="submit">記録する</button>
+        </fieldset>
+      </form>
+      <div class="page-bottom-spacer"></div>
+    </main>
+
+      <footer class="app-footer">
+        <a href="index.php" class="btn"><img src="images/home.png" alt="ホーム" width="48"></a>
+        <a href="input.php" class="btn"><img src="images/memo.png" alt="入力" width="48"></a>
+        <a href="articles.php" class="btn"><img src="images/book.png" alt="記事" width="48"></a>
+        <a href="points.php" class="btn"><img src="images/plants.png" alt="成長" width="48"></a>
+        <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="みんな" width="48"></a>
+        <a href="read.php" class="btn"><img src="images/calender.png" alt="記録一覧" width="48"></a>
+      </footer>
 
   <script src="js/main.js"></script>
 </body>
