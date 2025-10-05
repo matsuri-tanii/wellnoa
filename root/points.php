@@ -6,7 +6,7 @@ adopt_incoming_code();
 require_once __DIR__.'/points_lib.php';
 
 $pdo = db_conn();
-$uid = current_anon_user_id();
+[$uid, $code] = ensure_anon_identity($pdo);
 if (!$uid) { exit('匿名ユーザーIDがありません'); }
 
 $info = calc_points_for_user($pdo, $uid);
