@@ -1,33 +1,41 @@
 <?php
-require_once __DIR__.'/funcs.php'; adopt_incoming_code();
-
-if (
-  !isset($_GET['id']) || $_GET['id'] === ''
-) {
-  exit('paramError');
-}
+require_once __DIR__.'/funcs.php';
+adopt_incoming_code();
+session_start();
 
 $uid = current_anon_user_id();
+if (empty($uid)) {
+  exit('匿名ユーザーIDが取得できません。');
+}
 
-$id = $_GET['id'];
+if (empty($_GET['id']) || !ctype_digit($_GET['id'])) {
+  set_flash('削除対象が正しく指定されていません。', 'error');
+  header('Location: read.php');
+  exit();
+}
+
+$id = (int)$_GET['id'];
 
 // DB接続
 $pdo = db_conn();
 
-$sql = 'DELETE FROM daily_logs WHERE id=:id AND anonymous_user_id = :uid';
-
+$sql = 'DELETE FROM daily_logs WHERE id = :id AND anonymous_user_id = :uid';
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 $stmt->bindValue(':uid', $uid, PDO::PARAM_INT);
 
 try {
-  $status = $stmt->execute();
+  $stmt->execute();
+  if ($stmt->rowCount() > 0) {
+    set_flash('記録を削除しました', 'success');
+  } else {
+    // 他人のデータや存在しないIDの削除防止
+    set_flash('指定された記録が見つかりませんでした。', 'error');
+  }
 } catch (PDOException $e) {
-  echo json_encode(["sql error" => "{$e->getMessage()}"]);
-  exit();
+  set_flash('削除に失敗しました：' . $e->getMessage(), 'error');
 }
 
-set_flash('記録を削除しました');
-header("Location:read.php");
+// 一覧へ戻る
+header('Location: read.php');
 exit();
-

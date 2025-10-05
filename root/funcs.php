@@ -179,9 +179,9 @@ if (!function_exists('current_guest_id')) {
     }
 }
 
-/** 旧：set_guest_cookie() 互換（必要なら明示的にCookieへ書き込む） */
 function set_guest_cookie(?string $code = null): void {
-    $val = $code ?? (string)current_anon_user_id();
+    // 引数がなければ「今の anon_code」をそのまま再セットするだけ
+    $val = $code ?? current_anon_code();
     setcookie('anon_code', $val, [
         'expires'  => time() + 60*60*24*365,
         'path'     => '/',

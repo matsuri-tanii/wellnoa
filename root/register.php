@@ -62,17 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <title>新規登録</title>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .auth-card{max-width:420px;margin:40px auto;padding:20px;border:1px solid #eee;border-radius:12px;background:#fff}
-    .auth-card h1{font-size:20px;margin-bottom:12px}
-    .field{margin:10px 0}
-    label{display:block;font-weight:600;margin-bottom:4px}
-    input[type=email],input[type=password]{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
-    .btn{display:inline-block;padding:10px 14px;border:0;border-radius:10px;background:#17a877;color:#fff;font-weight:700;cursor:pointer}
-    .errors{background:#fff5f5;border:1px solid #fecaca;color:#9b1c1c;border-radius:8px;padding:10px;margin-bottom:10px}
-    .links{margin-top:10px}
-  </style>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
 </head>
 <body>
   <div class="auth-card">

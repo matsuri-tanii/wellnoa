@@ -1,0 +1,21 @@
+:root{
+  --bg: #f0f9f7;
+  --brand: #a7d7c5;
+  --brand-dark:#5db9a1;
+  --accent:#76c7b0;
+  --text:#333;
+  --muted:#666;
+  --border:#e5e7eb;
+  --card:#fff;
+  --shadow: 0 4px 10px rgba(0,0,0,0.08);
+  --radius: 10px;
+  --range-from: #c4a5f5; /* 明るいラベンダー 濃いラベンダー#8e7cc3 */
+  --range-to:   #FFFFCC; /* 明るいイエロー */
+  --range-thumb:coral; /* サム色 */
+  --badge:      #8e7cc3; /* 濃いラベンダー */
+
+  /* layout tokens */
+  --header-h: 140px;  /* 固定ヘッダーの高さ（お好みで） */
+  --side-w: 240px;    /* サイドナビ幅 */
+  --footer-h: 72px;   /* ボトムナビ高さ */
+}

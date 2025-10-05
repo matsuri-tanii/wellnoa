@@ -1,0 +1,240 @@
+/* カード */
+.card{
+  background: var(--card); border:1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem;
+}
+.card + .card { margin-top: 1rem; }
+.card-header{ font-weight:700; padding-bottom:.5rem; margin-bottom:.75rem; border-bottom:1px solid var(--border); }
+.card-body p { margin:.4rem 0; }
+
+/* ボタン */
+.btn{
+  display:inline-block; padding:.7rem 1.1rem; border-radius:.6rem;
+  background: var(--accent); color:#fff; font-weight:700;
+  transition: background .2s, transform .1s;
+}
+.btn:hover{ background: var(--brand-dark); }
+.btn:active{ transform: translateY(1px); }
+.btn-outline{ background:#fff; color:var(--accent); border:2px solid var(--accent); }
+.btn-outline:hover{ background:var(--accent); color:#fff; }
+
+/* グリッド（記事一覧など） */
+.grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap:16px; padding:1rem 1.2rem 6rem; }
+.card.article{ padding:0; overflow:hidden; transition: transform .15s, box-shadow .15s; }
+.card.article:hover{ transform: translateY(-4px); box-shadow:0 12px 24px rgba(11,93,174,.18); }
+.card .thumb{ width:100%; aspect-ratio:16/9; object-fit:cover; background:#ddd; }
+.card .body{ padding:.9rem .9rem 1.1rem; }
+.card .title{ font-size:1rem; font-weight:700; margin-bottom:.4rem; }
+.card .meta{ font-size:.85rem; color:var(--muted); }
+
+/* 記事詳細 */
+.article-main{ max-width:800px; margin:24px auto; padding:20px; }
+.article-meta{ font-size:.92rem; color:var(--muted); margin-bottom:12px; }
+.article-thumb{ border-radius:8px; margin:0 auto 16px; }
+
+/* フラッシュ */
+.flash{
+  position: fixed; left:50%; top:16px; transform: translateX(-50%);
+  padding:10px 16px; border-radius:8px; color:#fff; background: rgba(40,167,69,.95);
+  box-shadow:0 6px 20px rgba(0,0,0,.15); z-index:9999; transition: opacity .4s; opacity:1;
+}
+.flash.error{ background: rgba(220,53,69,.95); }
+.flash.info{  background: rgba(23,162,184,.95); }
+
+/* トーストメッセージ共通 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  opacity: 0;                /* ← 最初は透明 */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 9999;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+}
+
+/* article_detail: badges */
+.read-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 4px 10px; border-radius: 9999px;
+  font-size: 12px; font-weight: 600; line-height: 1;
+  vertical-align: middle;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.read-badge[data-state="notyet"] { background:#fff5f5; color:#c53030; border:1px solid #fecaca; }
+.read-badge[data-state="done"]   { background:#ecfdf5; color:#047857; border:1px solid #bbf7d0; }
+.read-badge .dot { width:8px; height:8px; border-radius:50%; background: currentColor; opacity:.7; }
+
+/* article_detail: 下部アクション */
+.article-actions { margin: 28px 0 36px; display:flex; flex-wrap:wrap; gap:10px; }
+.article-actions .btn {
+  appearance: none; border:1px solid #ddd; background:#fff;
+  padding:10px 14px; border-radius:10px; font-weight:600;
+  display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#222;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);
+}
+.article-actions .btn:hover { border-color:#bbb; }
+.article-actions .btn img { width:22px; height:auto; display:block; }
+
+/* articles: badges */
+.badges{margin-top:.5rem; display:flex; gap:.4rem; flex-wrap:wrap}
+.badge{display:inline-block; padding:.2rem .5rem; font-size:.78rem; border-radius:999px; border:1px solid var(--border); background:#fff}
+.badge-read{border-color:#a7d7c5; color:#317a68; background:#e8f5f1}
+.badge-unread{border-color:#cfd6dc; color:#667}
+.badge-new{border-color:#ffd166; color:#8a5a00; background:#fff6da}
+
+/* points: カード下部のボタンを中央寄せ */
+.card .footer{
+  display: flex;
+  justify-content: center;   /* ← 中央寄せ */
+  gap: 10px;                 /* ボタン間の余白 */
+  flex-wrap: wrap;           /* 幅が狭い時は折り返し */
+  margin-top: 12px;
+}
+
+/* モバイルで押しやすく */
+.card .footer .btn{
+  min-width: 140px;
+  text-align: center;
+}
+
+/* 応援ボタン hover アニメーション */
+.support-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.support-btn:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 6px rgba(255, 182, 193, 0.6));
+}
+
+.support-btn.is-on img {
+  filter: drop-shadow(0 0 4px rgba(255, 100, 150, 0.7));
+  transform: scale(1.1);
+  width: 40px;
+  height: 40px;
+  display: block;
+  pointer-events: none; /* ← hoverをbutton本体に通す！ */
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.notice-success {
+  background: #e6fffa;
+  border: 1px solid #81e6d9;
+  color: #065f46;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  animation: fadeOut 4s ease 2s forwards;
+}
+
+.flash {
+  animation: fadeOut 4s ease 2s forwards;
+}
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+}
+
+/* ヘッダー右上のアクション */
+.header-actions{
+  display:flex; align-items:center; gap:10px;
+  white-space: nowrap;
+}
+
+.btn.btn-sm{
+  padding: .45rem .7rem;
+  font-weight: 700;
+  border-radius: .55rem;
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.btn-strong{
+  background: var(--brand-dark);
+  color:#fff;
+  border:2px solid var(--brand-dark);
+}
+.btn-strong:hover{ background: #4ca890; }
+
+.badge{
+  display:inline-flex; align-items:center; gap:.35em;
+  padding:.30rem .55rem; border-radius:999px; font-size:.85rem; line-height:1;
+  border:1px solid var(--border); background:#fff; color:#333;
+}
+.badge-warn{
+  background:#fff; border-color:var(--badge); color: var(--badge);
+}
+.badge-ok{
+  background:#ecfdf5; border-color:#bbf7d0; color:#065f46;
+}
+
+.link-qr{
+  font-weight:700; text-decoration:none; color: var(--accent);
+  border-bottom: 2px solid rgba(118,199,176,.25);
+}
+.link-qr:hover{ border-bottom-color: currentColor; }
+
+@media (max-width: 480px){
+  .header-actions{ gap:6px; }
+  .btn.btn-sm{ padding:.4rem .6rem; font-size:.85rem; }
+  .badge{ padding:.25rem .5rem; font-size:.8rem; }
+  .hide-sm{ display:none; } /* 文言を省略して詰める */
+}
+
+/* ==============================
+   横長チップ型 FAB
+   ============================== */
+.fab-chip {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 100px); /* ui-nav.js で上書きされる */
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
+
+  padding: 12px 18px;
+  border-radius: 999px; /* pill 形 */
+  box-shadow: 0 8px 18px rgba(0,0,0,.25);
+  transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+}
+
+.fab-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.3);
+  background: var(--brand-dark);
+}
+
+.fab-chip img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+}
+
+/* PC/タブ横では非表示 */
+@media (min-width:1024px), (min-width:768px) and (orientation:landscape){
+  .fab-chip { display: none; }
+}
