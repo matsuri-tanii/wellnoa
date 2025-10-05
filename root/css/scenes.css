@@ -24,3 +24,58 @@
 .scene-wrap[data-scene="hill"]   .flower  { animation: bloom .7s ease .8s both; }
 .scene-wrap[data-scene="observatory"] .stars circle { animation: twinkle 2.2s ease-in-out infinite; }
 .scene-wrap[data-scene="rainbow"] .rainbow{ animation: fadeIn 1s ease .8s both; }
+
+/* ====== Scene animation bootstrap ====== */
+/* 進捗バーのスムーズ表示（必要なら） */
+.bar .fill { transition: width .8s ease; }
+
+/* 共通：ふわふわ動く雲・キラキラする星 */
+@keyframes floatX { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+@keyframes twinkle { 0%,100% { opacity:.2; } 50% { opacity:1; } }
+
+/* 芽が伸びる、花が咲く、蔓が描かれる、虹が現れる */
+@keyframes sproutUp { from { transform: translateY(15px) scaleY(.6); opacity:.0; }
+                      to   { transform: translateY(0)    scaleY(1);  opacity:1; } }
+@keyframes flowerPop { from { transform: scale(.4); opacity:0; }
+                       to   { transform: scale(1);  opacity:1; } }
+@keyframes drawStroke { from { stroke-dashoffset: 120; } to { stroke-dashoffset: 0; } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes brookFlow { from { d:path("M0,212 C120,207 180,222 300,217 C420,212 480,227 600,222 L600,260 L0,260 Z"); }
+                        to   { d:path("M0,208 C120,203 180,218 300,213 C420,208 480,223 600,218 L600,260 L0,260 Z"); } }
+
+/* ▼ IntersectionObserver で .inview が付いたら発火させる約束に揃える */
+.scene-wrap.inview .cloud { animation: floatX 6s ease-in-out infinite alternate; }
+.scene-wrap.inview .stars { animation: twinkle 2s ease-in-out infinite; }
+
+/* === シーン段階ごとの出し分け === */
+
+/* field（デフォルト）：芽だけ */
+.scene-wrap[data-scene="field"].inview .sprout { animation: sproutUp .9s ease-out .1s both; }
+
+/* brook 以上：小川出現＋芽 */
+.scene-wrap[data-scene="brook"].inview .sprout { animation: sproutUp .9s ease-out .1s both; }
+.scene-wrap[data-scene="brook"].inview .brook  { opacity:1; animation: brookFlow 3s ease-in-out .2s infinite alternate; }
+
+/* forest 以上：木漏れ日＋蔓の描画 */
+.scene-wrap[data-scene="forest"].inview .sprout { animation: sproutUp .9s ease-out .1s both; }
+.scene-wrap[data-scene="forest"].inview .komorebi { opacity:.6; animation: fadeIn .8s ease-out .2s both; }
+.scene-wrap[data-scene="forest"].inview .vine { animation: drawStroke 1.6s ease-out .4s both; }
+
+/* hill 以上：遠景の丘＋花が咲く */
+.scene-wrap[data-scene="hill"].inview .sprout { animation: sproutUp .9s ease-out .1s both; }
+.scene-wrap[data-scene="hill"].inview .hills { opacity:1; animation: fadeIn .6s ease-out .2s both; }
+.scene-wrap[data-scene="hill"].inview .flower { opacity:1; animation: flowerPop .7s ease-out .6s both; }
+.scene-wrap[data-scene="hill"].inview .vine { animation: drawStroke 1.6s ease-out .4s both; }
+
+/* observatory 以上：夜空＋星 */
+.scene-wrap[data-scene="observatory"].inview .sky-night { animation: fadeIn .8s ease-out .1s both; }
+.scene-wrap[data-scene="observatory"].inview .stars { opacity:1; }
+
+/* rainbow 以上：虹をふわっと */
+.scene-wrap[data-scene="rainbow"].inview .sky-night { animation: fadeIn .8s ease-out .1s both; }
+.scene-wrap[data-scene="rainbow"].inview .stars { opacity:1; }
+.scene-wrap[data-scene="rainbow"].inview .rainbow { opacity:1; animation: fadeIn .9s ease-out .4s both; }
+
+/* 雲を2つ動かす（あれば） */
+.scene .cloud--1 { transform-origin: 80px 40px; }
+.scene .cloud--2 { transform-origin: 520px 60px; animation-duration: 7.5s; }
