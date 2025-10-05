@@ -1,0 +1,116 @@
+/* サイドナビ（モバイル非表示） */
+.side-nav{ display:none; }
+
+/* モバイル/タブ縦：ボトムナビ表示 */
+.app-footer{
+  display:flex; justify-content:space-between; gap:8px;
+  position: sticky; bottom: 0; background: var(--brand);
+  padding: 6px 10px; height: var(--footer-h);
+}
+
+/* サイドナビ内の共通見た目（クラス無しでも効く） */
+.side-nav nav ul{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.side-nav a{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:10px; text-decoration:none; color:#223;
+  background:#f5fbf9; border:1px solid #e5f1ec;
+}
+.side-nav a:hover{ background:#eef6f3; }
+.side-nav a img{ width:22px; height:auto; display:block; }  /* ← ここが決め手 */
+
+/* PC/タブ横：サイド表示＆ボトム非表示 */
+@media (min-width:1024px), (min-width:768px) and (orientation:landscape){
+  .side-nav{
+    display:block; grid-area:sidenav;
+    position: fixed; top: var(--header-h); left: 0;
+    width: var(--side-w);
+    height: calc(100vh - var(--header-h));
+    overflow:auto; padding:12px;
+    background:#fff; border-right:1px solid #eee; z-index:50;
+  }
+  .app-footer{ display:none !important; } /* ← デスクトップでは必ず消す */
+}
+
+/* ボトムナビ（モバイル/タブ縦） */
+.app-footer{
+  display:flex; justify-content:space-between; gap:8px;
+  position: fixed; left: 0; right: 0; bottom: 0;
+  background: var(--brand);
+  padding: 6px 10px;
+  height: var(--footer-h);
+  /* iOS の安全域もカバー */
+  padding-bottom: calc(6px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav{ display:flex; justify-content:space-between; gap:8px; width:100%; }
+
+.bottom-link{
+  flex:1 1 0; text-align:center; text-decoration:none;
+  color:#083b2f;                       /* 濃いめの文字色で可読性UP */
+  background: rgba(255,255,255,.16);   /* 透明白でアイコンの台座 */
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:12px;
+  padding:8px 6px;
+  font-size:12px;
+  transition: transform .08s ease, background .15s ease;
+}
+
+@supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+  .bottom-link{
+    -webkit-backdrop-filter: saturate(140%) blur(2px);
+    backdrop-filter: saturate(140%) blur(2px);
+  }
+}
+
+.bottom-link img{ width:24px; height:auto; display:block; margin:0 auto 2px; }
+.bottom-link:active{ transform: translateY(1px); }
+.bottom-link.is-active{
+  background: rgba(255,255,255,.28);
+  border-color:#ffffff;
+  font-weight:700;
+  color:#125d4b;
+}
+
+/* PC/タブ横ではボトムナビを必ず隠す（サイド表示のため） */
+@media (min-width:1024px), (min-width:768px) and (orientation:landscape){
+  .app-footer{ display:none !important; }
+}
+
+/* -------- FAB（浮かぶ“記録”） -------- */
+/* ボトムナビを使う画面＝モバイル/タブ縦で表示、PC/タブ横では隠す */
+
+.fab-record{
+  position: fixed;
+  right: 16px;
+  /* フッター＋安全領域の上に浮かせる */
+  bottom: calc(env(safe-area-inset-bottom) + var(--footer-h) + 12px);
+  width: 56px; height: 56px;
+  display: none; /* デフォ非表示：モバイル系メディアクエリで表示 */
+  align-items: center; justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  z-index: 70;
+}
+.fab-record img{ display:block; pointer-events:none; }
+.fab-record:active{ transform: translateY(1px); }
+.fab-record:hover{ filter: brightness(.96); }
+
+/* 省スペース化：モバイル時は“記録”リンクをボトムナビから隠す */
+.bottom-link--record{ display: none; }
+
+/* モバイル/タブ縦：FABを表示（あなたのブレークポイントに合わせる） */
+@media (max-width: 1023px), (max-width: 767.98px) and (orientation: portrait){
+  .fab-record{ display: inline-flex; }
+}
+
+/* PC/タブ横：サイドナビ使用時はFABは不要（念のため明示） */
+@media (min-width: 1024px), (min-width: 768px) and (orientation: landscape){
+  .fab-record{ display: none; }
+}
+
+/* アニメ（控えめな出現）と配慮 */
+@media (prefers-reduced-motion: no-preference){
+  .fab-record{ animation: fabIn .18s ease-out both; }
+  @keyframes fabIn { from{ transform: translateY(8px); opacity:0 } to{ transform:none; opacity:1 } }
+}

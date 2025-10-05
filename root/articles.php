@@ -46,69 +46,70 @@ $fallbackThumb = 'images/article_placeholder.png';
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wellnoa - あなたの小さな健康習慣</title>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    /* バッジだけ軽く補強（共通CSSに移すなら .badge.* をそちらへ） */
-    .badges{margin-top:.5rem; display:flex; gap:.4rem; flex-wrap:wrap}
-    .badge{display:inline-block; padding:.2rem .5rem; font-size:.78rem; border-radius:999px; border:1px solid #e5e7eb; background:#fff}
-    .badge-read{border-color:#a7d7c5; color:#317a68; background:#e8f5f1}
-    .badge-unread{border-color:#cfd6dc; color:#667}
-    .badge-new{border-color:#ffd166; color:#8a5a00; background:#fff6da}
-  </style>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
 </head>
 <body>
+  <div class="layout">
+    <!-- 1) 常時表示ヘッダー 共通お知らせ（未登録警告・フラッシュ・登録誘導） -->
+    <?php require __DIR__.'/inc/header.php'; ?>
+    <!-- 2) サイドナビ（PC/タブ横のみCSSで表示） -->
+    <aside class="side-nav">
+      <?php require __DIR__.'/inc/side_nav.php'; ?>
+    </aside>
+    <!-- 3) メイン -->
+    <main class="main">
+      <?php require __DIR__.'/inc/notices.php'; ?>
 
-<header class="app-header">
-  <img class="app-logo" src="images/title_logo.png" alt="アプリロゴ画像" width="380">
-  <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
-</header>
+      <div class="container center">
+        <h2>articles</h2>
+        <h3>健康記事を読む</h3>
+      </div>
 
-<div class="container center">
-  <h2>articles</h2>
-  <h3>健康記事を読む</h3>
-</div>
+      <div class="grid">
+        <?php foreach ($articles as $a): ?>
+          <?php
+            $thumb  = $a['thumbnail_url'] ? h($a['thumbnail_url']) : $fallbackThumb;
+            $dateJp = $a['published_at'] ? date('Y/m/d', strtotime($a['published_at'])) : '—';
+            $isRead = ((int)$a['is_read'] === 1);
+            $isNew  = ((int)$a['is_new']  === 1);
+          ?>
+          <a class="card_link" href="article_detail.php?id=<?= h($a['id']) ?>">
+            <article class="card article">
+              <img class="thumb" src="<?= $thumb ?>" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async">
+              <div class="body">
+                <h2 class="title"><?= h($a['title']) ?></h2>
+                <?php if (!empty($a['source_name'])): ?>
+                  <div class="meta">出典: <?= h($a['source_name']) ?></div>
+                <?php endif; ?>
+                <div class="meta">公開日: <?= h($dateJp) ?></div>
 
-<div class="grid">
-  <?php foreach ($articles as $a): ?>
-    <?php
-      $thumb  = $a['thumbnail_url'] ? h($a['thumbnail_url']) : $fallbackThumb;
-      $dateJp = $a['published_at'] ? date('Y/m/d', strtotime($a['published_at'])) : '—';
-      $isRead = ((int)$a['is_read'] === 1);
-      $isNew  = ((int)$a['is_new']  === 1);
-    ?>
-    <a class="card_link" href="article_detail.php?id=<?= h($a['id']) ?>">
-      <article class="card article">
-        <img class="thumb" src="<?= $thumb ?>" alt="">
-        <div class="body">
-          <h2 class="title"><?= h($a['title']) ?></h2>
-          <?php if (!empty($a['source_name'])): ?>
-            <div class="meta">出典: <?= h($a['source_name']) ?></div>
-          <?php endif; ?>
-          <div class="meta">公開日: <?= h($dateJp) ?></div>
+                <div class="badges">
+                  <?php if ($isRead): ?>
+                    <span class="badge badge-read">読了</span>
+                  <?php else: ?>
+                    <span class="badge badge-unread">未読</span>
+                  <?php endif; ?>
+                  <?php if ($isNew): ?>
+                    <span class="badge badge-new">新着</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </article>
+          </a>
+        <?php endforeach; ?>
+      </div>
 
-          <div class="badges">
-            <?php if ($isRead): ?>
-              <span class="badge badge-read">読了</span>
-            <?php else: ?>
-              <span class="badge badge-unread">未読</span>
-            <?php endif; ?>
-            <?php if ($isNew): ?>
-              <span class="badge badge-new">新着</span>
-            <?php endif; ?>
-          </div>
-        </div>
-      </article>
-    </a>
-  <?php endforeach; ?>
-</div>
-
-<footer class="app-footer">
-  <a href="index.php" class="btn"><img src="images/home.png" alt="ホーム" width="48"></a>
-  <a href="input.php" class="btn"><img src="images/memo.png" alt="入力" width="48"></a>
-  <a href="points.php" class="btn"><img src="images/plants.png" alt="成長" width="48"></a>
-  <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="応援" width="48"></a>
-  <a href="read.php" class="btn"><img src="images/calender.png" alt="カレンダー" width="48"></a>
-</footer>
+    <!-- 4) ボトムナビ（スマホ/タブ縦） -->
+    <footer class="app-footer">
+      <?php require __DIR__.'/inc/bottom_nav.php'; ?>
+    </footer>
 
 </body>
 </html>

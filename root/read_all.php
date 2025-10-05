@@ -67,74 +67,65 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <meta charset="UTF-8" />
   <title>みんなのきろく</title>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    /* 右端揃え＆画像ボタンの見た目 */
-    .card.card-flex { display: grid; grid-template-columns: 1fr 72px; gap: 12px; align-items: center;}
-    .card-body { min-width: 0;}
-    .card-body .meta { color: var(--muted); font-size: .9rem; margin-bottom: .2rem; }
-    .card-body { overflow-wrap: anywhere; }
-    .support-area { display: flex; flex-direction: column; align-items: center; justify-content: center; row-gap: 6px; width: 72px; min-width: 72px;}
-    .support-count { font-size:14px; color:#666; min-width:4.5em; text-align:right; }
-    .support-btn { border: 0; background: transparent; padding: 0; cursor: pointer; line-height: 0; touch-action: manipulation;}
-    .support-btn img { display: block; width: 44px; height: auto; transition: transform .15s ease, opacity .15s ease;}
-    .support-btn:active img { transform: scale(.92); }
-    .support-btn.is-on img   { opacity: .85; }
-    .support-count { font-size: 12px; color: var(--muted); text-align: center;}
-    @media (max-width: 360px) {
-      .card.card-flex { grid-template-columns: 1fr 64px; }
-      .support-area { width: 64px; min-width: 64px; }
-      .support-btn img { width: 40px; }
-    }
-  </style>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
 </head>
 <body>
-<header class="app-header">
-  <img class="app-logo" src="images/title_logo.png" alt="Wellnoa" width="320">
-  <p class="tagline">みんなのきろく</p>
-</header>
+  <div class="layout">
+    <!-- 1) 常時表示ヘッダー 共通お知らせ（未登録警告・フラッシュ・登録誘導） -->
+    <?php require __DIR__.'/inc/header.php'; ?>
+    <!-- 2) サイドナビ（PC/タブ横のみCSSで表示） -->
+    <aside class="side-nav">
+      <?php require __DIR__.'/inc/side_nav.php'; ?>
+    </aside>
+    <!-- 3) メイン -->
+    <main class="main feed">
+      <?php require __DIR__.'/inc/notices.php'; ?>
+      <?php foreach ($rows as $r):
+        $cheerCount = (int)($r['cheer_count'] ?? 0);
+        $myCheered  = !empty($r['my_cheered']);
+      ?>
+        <div class="card_box">
+          <article class="card card-flex">
+            <div class="card-body">
+              <div class="meta"><?= h($r['d']) ?> <?= h($r['t']) ?></div>
 
-<main class="feed">
-  <?php foreach ($rows as $r):
-    $cheerCount = (int)($r['cheer_count'] ?? 0);
-    $myCheered  = !empty($r['my_cheered']);
-  ?>
-    <div class="card_box">
-      <article class="card card-flex">
-        <div class="card-body">
-          <div class="meta"><?= h($r['d']) ?> <?= h($r['t']) ?></div>
+              <?php if ($r['item_type'] === 'daily'): ?>
+                <div><strong>記録：『<?= h($r['activity_type'] ?: '（未入力）') ?>』</strong>をやった！</div>
+              <?php else: ?>
+                <div><strong>記事：『<?= h($r['article_title'] ?: '（不明）') ?>』</strong>を読んだ！</div>
+              <?php endif; ?>
+            </div>
 
-          <?php if ($r['item_type'] === 'daily'): ?>
-            <div><strong>記録：『<?= h($r['activity_type'] ?: '（未入力）') ?>』</strong>をやった！</div>
-          <?php else: ?>
-            <div><strong>記事：『<?= h($r['article_title'] ?: '（不明）') ?>』</strong>を読んだ！</div>
-          <?php endif; ?>
+            <div class="support-area">
+              <button
+                class="support-btn<?= $myCheered ? ' is-on' : '' ?>"
+                data-type="<?= h($r['item_type']) ?>"
+                data-id="<?= (int)$r['item_id'] ?>"
+                aria-pressed="<?= $myCheered ? 'true' : 'false' ?>"
+                aria-label="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
+                title="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
+              >
+                <img src="images/ouen.png" alt="<?= $myCheered ? '応援中' : '応援する' ?>">
+              </button>
+              <span class="support-count" aria-live="polite">応援 <?= $cheerCount ?></span>
+            </div>
+          </article>
         </div>
+      <?php endforeach; ?>
+    </main>
 
-        <div class="support-area">
-          <button
-            class="support-btn<?= $myCheered ? ' is-on' : '' ?>"
-            data-type="<?= h($r['item_type']) ?>"
-            data-id="<?= (int)$r['item_id'] ?>"
-            aria-pressed="<?= $myCheered ? 'true' : 'false' ?>"
-            aria-label="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
-            title="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
-          >
-            <img src="images/ouen.png" alt="<?= $myCheered ? '応援中' : '応援する' ?>">
-          </button>
-          <span class="support-count" aria-live="polite">応援 <?= $cheerCount ?></span>
-        </div>
-      </article>
-    </div>
-  <?php endforeach; ?>
-</main>
-
-<footer class="app-footer">
-  <a href="index.php" class="btn"><img src="images/home.png" alt="ホーム" width="48"></a>
-  <a href="input.php" class="btn"><img src="images/memo.png" alt="入力" width="48"></a>
-  <a href="articles.php" class="btn"><img src="images/book.png" alt="記事" width="48"></a>
-  <a href="points.php" class="btn"><img src="images/plants.png" alt="成長" width="48"></a>
-</footer>
+    <!-- 4) ボトムナビ（スマホ/タブ縦） -->
+    <footer class="app-footer">
+      <?php require __DIR__.'/inc/bottom_nav.php'; ?>
+    </footer>
 
 <script src="js/main.js"></script>
 <script src="js/cheers.js"></script>

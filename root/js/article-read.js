@@ -1,27 +1,48 @@
 // js/article-read.js
 (function () {
-  // すでに読了表示なら何もしない（トーストは「未読→読了」でだけ出す）
-  const badge = document.getElementById('readBadge');
+  const badge  = document.getElementById('readBadge');
   const bottom = document.getElementById('bottom');
   if (!bottom) return;
 
   let alreadyDone = badge ? (badge.dataset.state === 'done') : false;
-  let sent = false; // 二重送信防止
+  let sent = false;
   let lastToastTimer = null;
+
+  const scroller = document.scrollingElement || document.documentElement;
+
+  const loadAt = performance.now();
+  const MIN_DWELL_MS   = 3000;
+  const MIN_SCROLL_PX  = Math.max(150, Math.round(window.innerHeight * 0.4));
+  const READ_THRESHOLD = 0.8;
+
+  const startTop = scroller.scrollTop;
+
+  function scrolledEnough() {
+    const delta = Math.max(0, scroller.scrollTop - startTop);
+    return delta >= MIN_SCROLL_PX;
+  }
+  function dwelledEnough() {
+    return performance.now() - loadAt >= MIN_DWELL_MS;
+  }
+  function progressEnough() {
+    const p = (scroller.scrollTop + window.innerHeight) / scroller.scrollHeight;
+    return p >= READ_THRESHOLD;
+  }
+  function isTooShort() {
+    return scroller.scrollHeight <= window.innerHeight + 20;
+  }
 
   function showToast(msg) {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = msg;
     el.style.display = 'block';
-    // 再起動用
-    void el.offsetWidth; 
-    el.classList.add('show');
+    requestAnimationFrame(() => el.classList.add('show'));
     clearTimeout(lastToastTimer);
     lastToastTimer = setTimeout(() => {
       el.classList.remove('show');
       setTimeout(() => { el.style.display = 'none'; }, 300);
-    }, 2000);
+    }, 2500);
   }
 
   async function markAsRead() {
@@ -33,63 +54,50 @@
       if (!articleId) return;
 
       const form = new FormData();
-      form.append('article_id', articleId.toString());
+      form.append('article_id', String(articleId));
 
       const res = await fetch('save_article_read.php', {
         method: 'POST',
         body: form,
-        headers: { 'X-Requested-With': 'fetch' },
+        headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
         credentials: 'same-origin',
       });
 
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'failed');
+      const json = await res.json().catch(() => (res.ok ? { ok: true, already: false } : null));
+      if (!json || !json.ok) throw new Error(json?.error || 'failed');
 
-      // 既に読了済みの場合はトーストを出さない（初期が未読→今回で読了の時だけ出す）
       if (!json.already && !alreadyDone) {
-        // バッジを「読了」に更新
-        if (badge) {
-          badge.dataset.state = 'done';
-          const label = badge.querySelector('.label');
-          if (label) label.textContent = '読了';
-        }
-        showToast('読了を記録しました！');
+        requestAnimationFrame(() => {
+          const b = document.getElementById('readBadge');
+          if (b) {
+            b.dataset.state = 'done';
+            const label = b.querySelector('.label');
+            if (label) label.textContent = '読了';
+          }
+          showToast('読了を記録しました！');
+        });
         alreadyDone = true;
       }
     } catch (err) {
       console.error(err);
-      // エラー時は静かにスルー（必要ならトースト出してもOK）
-      // showToast('記録に失敗しました…');
     }
   }
 
-  // IntersectionObserver で #bottom が見えたら記録
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
-        if (e.isIntersecting) {
+        if (!e.isIntersecting) continue;
+        if (alreadyDone) return;
+        if (document.visibilityState !== 'visible') return;
+
+        if (isTooShort() || (dwelledEnough() && (scrolledEnough() || progressEnough()))) {
           markAsRead();
-          // 一度で十分
           io.disconnect();
-          break;
         }
       }
     },
-    {
-      // フッターに隠れて発火しない問題を避けるため「下方向に余裕」を持たせる
-      root: null,
-      rootMargin: '0px 0px -25% 0px', // 画面の下25%手前で発火
-      threshold: 0,
-    }
+    { root: null, rootMargin: '0px 0px -5% 0px', threshold: 0.01 }
   );
-  io.observe(bottom);
 
-  // 念のためのフォールバック（極端に短い記事など）
-  window.addEventListener('load', () => {
-    // 既に下端近くまで見えてる場合の保険
-    if (bottom.getBoundingClientRect().top < window.innerHeight * 0.75) {
-      markAsRead();
-      io.disconnect();
-    }
-  });
+  io.observe(bottom);
 })();
