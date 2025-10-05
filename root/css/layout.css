@@ -1,0 +1,50 @@
+/* 固定ヘッダー（モバイル/タブ縦）*/
+.site-header{
+  position: fixed; top:0; left:0; right:0; height:var(--header-h);
+  z-index:100; background:#fff; border-bottom:1px solid #eee;
+}
+.site-header__inner{
+  max-width: 1200px; margin: 0 auto; height: 100%;
+  padding: 10px 16px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+}
+.brand__link { text-decoration:none; display:inline-block; }
+.tagline { margin-top:4px; color:#666; font-size:14px; }
+.side-nav { grid-area: sidenav; }
+
+/* レイアウト：モバイル/タブ縦＝ボトム、PC/タブ横＝サイド */
+.layout{
+  display:grid;
+  grid-template-areas:
+    "header"
+    "main"
+    "footer";
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+.site-header{ grid-area: header; }
+.main{
+  grid-area: main;
+  padding: 12px;
+  margin-top: var(--header-h);                 /* ヘッダー回避（モバイル） */
+  padding-bottom: calc(var(--footer-h) + 8px);/* ボトムナビ分の余白（モバイル） */
+}
+.main-inner{ max-width:960px; margin:0 auto; }
+.app-footer{ grid-area: footer; }
+
+/* PC/タブ横：サイドナビ＋メイン（ボトムnav非表示） */
+@media (min-width:1024px), (min-width:768px) and (orientation:landscape){
+  .layout{
+    grid-template-areas:
+      "header header"
+      "sidenav main";
+    grid-template-columns: var(--side-w) 1fr;
+    grid-template-rows: auto 1fr;
+    padding-top: calc(12px + var(--header-h)); /* ヘッダー回避（PC） */
+  }
+  .main{
+    padding: 20px;        /* ← 重複の padding-top は不要 */
+    margin: 0;
+    padding-bottom: 20px; /* ← モバイルの大きな下余白をリセット */
+  }
+  .app-footer{ display: none; }  /* ← PCではボトムナビ非表示 */
+}

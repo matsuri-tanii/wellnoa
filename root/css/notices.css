@@ -1,0 +1,6 @@
+.notice-area{ max-width: 1000px; margin: 10px auto 16px; padding: 0 12px; }
+.notice{ padding:10px; border-radius:8px; margin-bottom:8px; font-size:14px; }
+.notice-warn{    background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; }
+.notice-success{ background:#e6ffed; color:#2b8a3e; border:1px solid #b2f2bb; }
+.notice-hint{    background:#fff9db; color:#704800; border:1px solid #ffe066; }
+.notice .link-strong{ font-weight:700; margin-left:8px; }

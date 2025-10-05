@@ -1,0 +1,11 @@
+html, body {
+  font-family: "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.7;
+}
+body { padding-bottom: 100px; }
+
+img { max-width: 100%; height: auto; display: block; }
+
+.container { padding: 2rem; margin: 0 auto; max-width: 1000px; }

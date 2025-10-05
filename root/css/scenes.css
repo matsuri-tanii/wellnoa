@@ -1,0 +1,26 @@
+.scene-wrap{ margin:16px auto; max-width: 640px; }
+.scene{ width:100%; height:auto; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,.06); }
+
+/* アニメ */
+@keyframes growUp { from { transform: translateY(30px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+@keyframes dash   { from { stroke-dashoffset:120 } to { stroke-dashoffset:0 } }
+@keyframes bloom  { from { transform: scale(.6); opacity:0 } to { transform: scale(1); opacity:1 } }
+@keyframes twinkle{ 0%,100%{opacity:.8} 50%{opacity:1} }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+/* 初期状態 */
+.sprout { transform-origin: 300px 200px; animation: growUp .8s ease both .2s; }
+.vine, .flower { animation: none; }
+.brook, .komorebi, .hills, .stars, .rainbow { opacity:0; }
+
+/* シーン別 */
+.scene-wrap[data-scene="field"]  .sprout  { animation: growUp .8s ease .2s both; }
+.scene-wrap[data-scene="brook"]  .brook   { animation: fadeIn .8s ease .1s both; }
+.scene-wrap[data-scene="brook"]  .sprout  { animation: growUp .8s ease .2s both; }
+.scene-wrap[data-scene="forest"] .brook   { animation: fadeIn 1s ease .1s both; }
+.scene-wrap[data-scene="forest"] .komorebi{ animation: fadeIn 1s ease .2s both; }
+.scene-wrap[data-scene="forest"] .vine    { animation: dash 1.2s ease .2s both; }
+.scene-wrap[data-scene="hill"]   .hills   { animation: fadeIn .8s ease .2s both; }
+.scene-wrap[data-scene="hill"]   .flower  { animation: bloom .7s ease .8s both; }
+.scene-wrap[data-scene="observatory"] .stars circle { animation: twinkle 2.2s ease-in-out infinite; }
+.scene-wrap[data-scene="rainbow"] .rainbow{ animation: fadeIn 1s ease .8s both; }

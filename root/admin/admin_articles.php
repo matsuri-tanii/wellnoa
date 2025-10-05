@@ -96,19 +96,15 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <meta charset="UTF-8">
   <title>記事管理</title>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .wrap { max-width: 1000px; margin: 20px auto 120px; padding: 0 12px; }
-    table { width:100%; border-collapse: collapse; background:#fff; }
-    th, td { border:1px solid #e5e7eb; padding:8px; }
-    th { background:#f8fafc; text-align:left; }
-    .actions { display:flex; gap:8px; }
-    form.inline { display:inline; }
-    .new-form .row { display:flex; gap:10px; margin-bottom:8px; }
-    .new-form label { width:140px; color:#666; }
-    .new-form input[type="text"], .new-form textarea { flex:1; padding:.5rem; border:1px solid #e5e7eb; border-radius:8px; }
-    .new-form input[type="datetime-local"]{ padding:.5rem; border:1px solid #e5e7eb; border-radius:8px; }
-  </style>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 <header class="app-header">

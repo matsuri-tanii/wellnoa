@@ -41,120 +41,71 @@ if ($status === false) {
   <meta charset="UTF-8">
   <title><?= h($article['title']) ?></title>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
-
-  <style>
-    /* ——— 追加の最小スタイル（必要ならstyle.cssに移動） ——— */
-    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; line-height: 1.6; }
-    img  { max-width: 100%; height: auto; }
-    .article-main { max-width: 880px; margin: 0 auto; }
-    .article-meta { color:#666; font-size:14px; margin: 6px 0 16px; }
-
-    /* バッジ（articles.php 風の丸タグ） */
-    .read-badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding: 4px 10px; border-radius: 9999px;
-      font-size: 12px; font-weight: 600; line-height: 1;
-      vertical-align: middle; user-select: none;
-    }
-    .read-badge[data-state="notyet"] { background:#fff5f5; color:#c53030; border:1px solid #fecaca; }
-    .read-badge[data-state="done"]   { background:#ecfdf5; color:#047857; border:1px solid #bbf7d0; }
-
-    .read-badge .dot {
-      width:8px; height:8px; border-radius:50%;
-      background: currentColor; opacity:.7;
-    }
-
-    /* 下部アクション（本文内の戻るボタン群） */
-    .article-actions {
-      margin: 28px 0 36px; display:flex; flex-wrap:wrap; gap:10px;
-    }
-    .article-actions .btn {
-      appearance: none; border:1px solid #ddd; background:#fff;
-      padding:10px 14px; border-radius:10px; font-weight:600;
-      display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#222;
-      box-shadow:0 1px 2px rgba(0,0,0,.05);
-    }
-    .article-actions .btn:hover { border-color:#bbb; }
-    .article-actions .btn img { width:22px; height:auto; display:block; }
-
-    /* トースト（既存） */
-    .toast{
-      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
-      background: rgba(0,0,0,.8); color:#fff; padding:10px 14px;
-      border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,.2);
-      z-index: 9999; opacity:0; transition: opacity .3s ease, transform .3s ease;
-    }
-    .toast.show{ display:block; opacity:1; transform: translateX(-50%) translateY(0); }
-
-    /* 固定フッター（既存） */
-    footer.app-footer {
-      position: fixed; bottom: 0; width: 100%;
-    }
-    .footerMenuList {
-      background-color: #a7d7c5; padding: 5px;
-      display: flex; justify-content: space-between;
-    }
-    .btn{ display: inline-block; }
-    .btn img{ display: block; }
-  </style>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
 </head>
 <body>
-  <header class="app-header" style="text-align:center; margin-bottom:10px;">
-    <img class="app-logo" src="images/title_logo.png" alt="Wellnoa" width="320">
-    <p class="tagline">あなたの健康へ、ちいさな一歩を。</p>
-  </header>
+  <div class="layout">
+    <!-- 1) 常時表示ヘッダー 共通お知らせ（未登録警告・フラッシュ・登録誘導） -->
+    <?php require __DIR__.'/inc/header.php'; ?>
+    <!-- 2) サイドナビ（PC/タブ横のみCSSで表示） -->
+    <aside class="side-nav">
+      <?php require __DIR__.'/inc/side_nav.php'; ?>
+    </aside>
+    <!-- 3) メイン -->
+    <main class="main article-main">
+      <?php require __DIR__.'/inc/notices.php'; ?>
+      <!-- ここにバッジを“上部”表示 -->
+      <div class="read-badge" id="readBadge"
+          data-state="<?= $isRead ? 'done' : 'notyet' ?>"
+          aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label"><?= $isRead ? '読了' : '未読' ?></span>
+      </div>
 
-  <main class="container article-main">
-    <!-- ここにバッジを“上部”表示 -->
-    <div class="read-badge" id="readBadge"
-        data-state="<?= $isRead ? 'done' : 'notyet' ?>"
-        aria-live="polite">
-      <span class="dot" aria-hidden="true"></span>
-      <span class="label"><?= $isRead ? '読了' : '未読' ?></span>
-    </div>
+      <h1 style="word-break:break-word;"><?= h($article['title']) ?></h1>
 
-    <h1 style="word-break:break-word;"><?= h($article['title']) ?></h1>
+      <p class="article-meta">
+        カテゴリ：<?= h($article['category']) ?> ｜ 公開日：<?= h($article['published_at']) ?>
+        <?php if (!empty($article['source_name'])): ?>
+          ｜ 出典：<?= h($article['source_name']) ?>
+        <?php endif; ?>
+      </p>
 
-    <p class="article-meta">
-      カテゴリ：<?= h($article['category']) ?> ｜ 公開日：<?= h($article['published_at']) ?>
-      <?php if (!empty($article['source_name'])): ?>
-        ｜ 出典：<?= h($article['source_name']) ?>
+      <?php if (!empty($article['thumbnail_url'])): ?>
+        <img class="article-thumb" src="<?= h($article['thumbnail_url']) ?>" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async">
       <?php endif; ?>
-    </p>
 
-    <?php if (!empty($article['thumbnail_url'])): ?>
-      <img class="article-thumb" src="<?= h($article['thumbnail_url']) ?>" alt="">
-    <?php endif; ?>
+      <p><?= nl2br(h($article['description'])) ?></p>
 
-    <p><?= nl2br(h($article['description'])) ?></p>
+      <?php if (!empty($article['url'])): ?>
+        <p><a class="btn btn-outline" href="<?= h($article['url']) ?>" target="_blank" rel="noopener">
+          元記事<?= !empty($article['source_name']) ? '（'.h($article['source_name']).'）' : '' ?>を開く
+        </a></p>
+      <?php endif; ?>
 
-    <?php if (!empty($article['url'])): ?>
-      <p><a class="btn btn-outline" href="<?= h($article['url']) ?>" target="_blank" rel="noopener">
-        元記事<?= !empty($article['source_name']) ? '（'.h($article['source_name']).'）' : '' ?>を開く
-      </a></p>
-    <?php endif; ?>
+      <!-- 本文内の戻るボタン群（フッターとは別に “本文の終わり” にも設置） -->
+      <div class="article-actions">
+        <a class="btn" href="articles.php"><img src="images/book.png" alt="">記事一覧へ戻る</a>
+      </div>
 
-    <!-- 本文内の戻るボタン群（フッターとは別に “本文の終わり” にも設置） -->
-    <div class="article-actions">
-      <a class="btn" href="articles.php"><img src="images/book.png" alt="">記事一覧へ戻る</a>
-      <a class="btn" href="index.php"><img src="images/home.png" alt="">ホームに戻る</a>
-    </div>
+      <!-- スクロール判定スペーサ（読了検知に利用） -->
+      <div id="bottom" class="page-bottom-spacer" style="height:40vh;"></div>
 
-    <!-- スクロール判定スペーサ（読了検知に利用） -->
-    <div id="bottom" class="page-bottom-spacer" style="height: 40vh;"></div>
-    <div id="toast" class="toast" style="display:none;" aria-live="polite"></div>
-  </main>
+      <!-- 読了トースト（そのままでOK） -->
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </main>
 
-  <!-- 既存の固定フッター（そのまま） -->
-  <footer class="app-footer">
-    <a href="index.php" class="btn"><img src="images/home.png"   alt="ホーム" width="48"></a>
-    <a href="input.php" class="btn"><img src="images/memo.png"   alt="入力"   width="48"></a>
-    <a href="articles.php" class="btn"><img src="images/book.png" alt="記事"   width="48"></a>
-    <a href="points.php" class="btn"><img src="images/plants.png" alt="成長"   width="48"></a>
-    <a href="read_all.php" class="btn"><img src="images/ouen.png" alt="みんな" width="48"></a>
-    <a href="read.php" class="btn"><img src="images/calender.png" alt="記録一覧" width="48"></a>
-  </footer>
+    <!-- 4) ボトムナビ（スマホ/タブ縦） -->
+    <footer class="app-footer">
+      <?php require __DIR__.'/inc/bottom_nav.php'; ?>
+    </footer>
 
   <script src="js/article-read.js"></script>
   <script>
