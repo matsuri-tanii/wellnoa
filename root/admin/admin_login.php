@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="css/notices.css">
     <link rel="stylesheet" href="css/utilities.css">
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/page-overrides.css">
 </head>
 <body>
   <h1>管理ログイン</h1>

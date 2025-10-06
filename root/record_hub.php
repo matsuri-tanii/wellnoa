@@ -16,7 +16,6 @@ $options = [
   <meta charset="utf-8">
   <title>記録ハブ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 共通CSS -->
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -24,6 +23,9 @@ $options = [
   <link rel="stylesheet" href="css/nav.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
   <style>
     .hub { max-width: 960px; margin: 0 auto; }
     .top-actions{ display:flex; gap:8px; align-items:center; justify-content:flex-end; padding:10px 12px; }
