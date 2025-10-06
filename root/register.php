@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="links">
-      すでにアカウントをお持ちですか？ <a href="login.php">ログイン</a>
+      <a href="login.php">すでにアカウントをお持ちですか？ ログイン</a>
     </div>
   </div>
 </body>

@@ -81,8 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </form>
 
+    <p class="help-link">
+      <a href="forgot_password.php">パスワードをお忘れの方はこちら</a>
+    </p>
     <div class="links">
-      アカウントをお持ちでないですか？ <a href="register.php">新規登録</a>
+      <a href="register.php">アカウントをお持ちでないですか？ 新規登録</a>
     </div>
   </div>
 </body>

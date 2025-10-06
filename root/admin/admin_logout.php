@@ -1,5 +1,4 @@
 <?php
-// /admin/admin_logout.php
 declare(strict_types=1);
 require_once __DIR__.'/admin_auth.php';
 
