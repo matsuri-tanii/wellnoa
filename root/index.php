@@ -90,17 +90,6 @@ $showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
     <main class="main">
       <?php require __DIR__.'/inc/notices.php'; ?>
 
-      <?php if ($showRegisterBanner): ?>
-        <div id="regBanner" class="notice info" style="margin:12px">
-          <strong>もっと便利に使うには登録がおすすめです。</strong>
-          <a href="register.php" class="btn btn-sm">登録する</a>
-          <button type="button"
-            onclick="document.getElementById('regBanner').style.display='none'; document.cookie='dismiss_reg=1; path=/; max-age=2592000'">
-            閉じる
-          </button>
-        </div>
-      <?php endif; ?>
-
       <div class="main-inner">
         <div class="dashboard-grid">
           <!-- 左：グラフ群 -->
