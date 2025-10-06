@@ -30,16 +30,17 @@ if ($id > 0) {
 <head>
 <meta charset="UTF-8">
 <title><?= $id? '記事編集':'記事追加' ?></title>
-<link rel="stylesheet" href="css/reset.css">
-<link rel="stylesheet" href="css/variables.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/nav.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/forms.css">
-<link rel="stylesheet" href="css/notices.css">
-<link rel="stylesheet" href="css/utilities.css">
-<link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
 </head>
 <body>
 <header class="app-header">

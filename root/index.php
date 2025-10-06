@@ -64,7 +64,8 @@ $showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/notices.css">
   <link rel="stylesheet" href="css/utilities.css">
-  <link rel="stylesheet" href="css/charts.css?v=20251006b">
+  <link rel="stylesheet" href="css/charts.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>

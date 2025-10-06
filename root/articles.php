@@ -98,74 +98,21 @@ $fallbackThumb = 'images/article_placeholder.png';
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Wellnoa - 健康記事</title>
-<link rel="stylesheet" href="css/reset.css">
-<link rel="stylesheet" href="css/variables.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/nav.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/forms.css">
-<link rel="stylesheet" href="css/notices.css">
-<link rel="stylesheet" href="css/utilities.css">
-<style>
-/* ── コンパクト表示/フォーム行揃え ───────────────────── */
-.compact-articles h2{font-size:18px;margin:4px 0 2px;}
-.compact-articles h3{font-size:14px;margin:0 0 6px;}
-.compact-articles details.filters{margin:4px 0 8px;border:1px solid #eee;border-radius:8px;background:#fff;}
-.compact-articles details.filters>summary{
-  -webkit-user-select:none; user-select:none;
-  padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer;list-style:none;
-}
-.compact-articles details.filters[open]>summary{border-bottom:1px solid #eee;}
-
-.compact-articles .filter-bar{
-  display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; padding:8px; margin:0;
-}
-/* 共通高さ */
-.compact-articles .filter-bar select,
-.compact-articles .filter-bar input[type="search"],
-.compact-articles .filter-bar .btn{ height:34px; font-size:14px; border-radius:8px; }
-
-/* セレクト2つを横並びに固定幅 */
-.compact-articles .filter-bar .selects{ display:flex; gap:8px; flex:0 0 auto; }
-.compact-articles .filter-bar .selects select{
-  width:auto !important; flex:0 0 180px; max-width:220px; padding:0 10px;
-}
-
-/* 検索は可変 */
-.compact-articles .filter-bar input[type="search"]{
-  width:auto !important; min-width:180px; flex:1 1 220px; padding:0 10px;
-}
-
-/* label 全般の block化を打消し＋揃える */
-.compact-articles .filter-bar label{ display:inline-flex; align-items:center; gap:6px; margin:0; font-size:13px; }
-.compact-articles .filter-bar .check{ height:34px; padding:0 4px; }
-.compact-articles .filter-bar .check input{ margin:0; }
-
-/* ボタン */
-.compact-articles .filter-bar .btn{ display:inline-flex; align-items:center; padding:0 12px; }
-
-/* カード */
-.compact-articles .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
-.compact-articles .card.article{padding:10px;border-radius:8px;}
-.compact-articles .card.article .thumb{width:100%;height:120px;object-fit:cover;border-radius:6px;}
-.compact-articles .title{font-size:15px;margin:6px 0 4px;line-height:1.3;}
-.compact-articles .meta{font-size:12px;opacity:.75;}
-.compact-articles .badge{font-size:11px;padding:1px 6px;border-radius:999px;}
-/* ページャ */
-.compact-articles .pager{display:flex;gap:6px;justify-content:center;margin:12px 0;}
-.compact-articles .pager a,.compact-articles .pager span{padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;}
-.compact-articles .is-current{background:#eef6f4;font-weight:600;}
-
-@media (max-width: 480px){
-  .compact-articles .filter-bar .selects select{ flex:1 1 160px; }
-  .compact-articles .filter-bar input[type="search"]{ flex:1 1 240px; }
-}
-</style>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/notices.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
 </head>
 <body>
+<?php require __DIR__.'/inc/header.php'; ?>
 <div class="layout compact-articles">
-  <?php require __DIR__.'/inc/header.php'; ?>
+
   <aside class="side-nav"><?php require __DIR__.'/inc/side_nav.php'; ?></aside>
 
   <main class="main">
