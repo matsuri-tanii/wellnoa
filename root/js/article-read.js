@@ -1,4 +1,3 @@
-// js/article-read.js
 (function () {
   const badge  = document.getElementById('readBadge');
   const bottom = document.getElementById('bottom');

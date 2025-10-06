@@ -30,8 +30,7 @@ $cheerCount = (int)$pdo->query("SELECT COUNT(*) FROM cheers WHERE target_type IN
 $st = $pdo->prepare("SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = :uid");
 $st->execute([':uid'=>$uid]); $dailyCount = (int)$st->fetchColumn();
 
-/* ---------------------- 円/ドーナツ用の“生データ” ----------------------
-   ※ 全件を軽く取得して、期間は前段JSで集計。SQLはこれ以上重くしない。 */
+/* ---------------------- 円/ドーナツ用の“生データ” ---------------------- */
 $st = $pdo->prepare("
   SELECT a.category, ar.read_date
   FROM article_reads ar
@@ -48,12 +47,6 @@ $st = $pdo->prepare("
 ");
 $st->execute([':uid'=>$uid]);
 $actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
-
-/* ---------------------- 登録バナー表示判定 ---------------------- */
-$cnt1 = (int)$pdo->query("SELECT COUNT(*) FROM daily_logs    WHERE anonymous_user_id = ".(int)$uid)->fetchColumn();
-$cnt2 = (int)$pdo->query("SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = ".(int)$uid)->fetchColumn();
-$totalUse = $cnt1 + $cnt2;
-$showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -95,12 +88,12 @@ $showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
           <!-- 左：グラフ群 -->
           <div class="chart-column">
             <div class="range-tabs" role="tablist" aria-label="期間">
-              <button class="tab is-active" data-range="7">1週間</button>
+              <button class="tab is-active" data-range="all">全期間</button>
+              <button class="tab" data-range="7">1週間</button>
               <button class="tab" data-range="30">1ヶ月</button>
               <button class="tab" data-range="182">半年</button>
               <button class="tab" data-range="365">1年</button>
-              <button class="tab" data-range="1095">過去3年</button>
-              <button class="tab" data-range="all">全期間</button>
+              <button class="tab" data-range="1095">3年</button>
             </div>
 
             <div class="card">
@@ -200,7 +193,7 @@ $showRegisterBanner = ($totalUse >= 5) && empty($_COOKIE['dismiss_reg']);
     return { labels, values };
   }
 
-  /* ====== 3) 初期表示：全期間 ====== */
+  /* ====== 3) 初期表示：全期間（タブと一致） ====== */
   let currentRange = 'all';
 
   // 折れ線
