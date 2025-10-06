@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 $nav_active = 'home';
-
 require_once __DIR__.'/funcs.php';
 adopt_incoming_code();
 
@@ -10,27 +9,30 @@ $pdo = db_conn();
 $uid = current_anon_user_id();
 set_guest_cookie();
 
-/* ---------------------- 折れ線（既存の日別平均） ---------------------- */
+/* ---------------------- 折れ線（日別平均） ---------------------- */
 $sql = "SELECT log_date, AVG(body_condition) AS avg_body, AVG(mental_condition) AS avg_mental
         FROM daily_logs WHERE anonymous_user_id = :uid
         GROUP BY log_date ORDER BY log_date";
-$st = $pdo->prepare($sql); $st->execute([':uid'=>$uid]);
+$st = $pdo->prepare($sql); 
+$st->execute([':uid'=>$uid]);
 $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
 $dates     = array_column($rows, 'log_date');
 $avgBody   = array_map('floatval', array_column($rows, 'avg_body'));
 $avgMental = array_map('floatval', array_column($rows, 'avg_mental'));
 
-/* ---------------------- 右カラムの数字 ---------------------- */
+/* ---------------------- 数字カラム ---------------------- */
 $st = $pdo->prepare("SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = :uid");
-$st->execute([':uid'=>$uid]); $articleCount = (int)$st->fetchColumn();
+$st->execute([':uid'=>$uid]); 
+$articleCount = (int)$st->fetchColumn();
 
 $cheerCount = (int)$pdo->query("SELECT COUNT(*) FROM cheers WHERE target_type IN('daily','read')")->fetchColumn();
 
 $st = $pdo->prepare("SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = :uid");
-$st->execute([':uid'=>$uid]); $dailyCount = (int)$st->fetchColumn();
+$st->execute([':uid'=>$uid]); 
+$dailyCount = (int)$st->fetchColumn();
 
-/* ---------------------- 円/ドーナツ用の“生データ” ---------------------- */
+/* ---------------------- 円 / ドーナツ用 ---------------------- */
 $st = $pdo->prepare("
   SELECT a.category, ar.read_date
   FROM article_reads ar
@@ -38,7 +40,7 @@ $st = $pdo->prepare("
   WHERE ar.anonymous_user_id = :uid
 ");
 $st->execute([':uid'=>$uid]);
-$readRows = $st->fetchAll(PDO::FETCH_ASSOC);   // [{category, read_date}]
+$readRows = $st->fetchAll(PDO::FETCH_ASSOC);
 
 $st = $pdo->prepare("
   SELECT activity_type, log_date
@@ -46,7 +48,7 @@ $st = $pdo->prepare("
   WHERE anonymous_user_id = :uid
 ");
 $st->execute([':uid'=>$uid]);
-$actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
+$actRows = $st->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -54,7 +56,6 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wellnoa - あなたの小さな健康習慣</title>
-  <!-- 共通CSS（順番固定＆page-overridesは最後） -->
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -82,9 +83,9 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
 
     <main class="main">
       <?php require __DIR__.'/inc/notices.php'; ?>
-
       <div class="main-inner">
         <div class="dashboard-grid">
+
           <!-- 左：グラフ群 -->
           <div class="chart-column">
             <div class="range-tabs" role="tablist" aria-label="期間">
@@ -118,21 +119,11 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
             </div>
           </div>
 
-          <!-- 右：数字系 -->
+          <!-- 右：数字 -->
           <div class="stats-column">
-            <div class="stat-card">
-              <div class="stat-label">読んだ記事</div>
-              <div class="stat-value"><?= h((string)$articleCount) ?><span class="stat-unit">本</span></div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">応援された数</div>
-              <div class="stat-value"><?= h((string)$cheerCount) ?><span class="stat-unit">回</span></div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">行動記録数</div>
-              <div class="stat-value"><?= h((string)$dailyCount) ?><span class="stat-unit">件</span></div>
-            </div>
-
+            <div class="stat-card"><div class="stat-label">読んだ記事</div><div class="stat-value"><?= h((string)$articleCount) ?><span class="stat-unit">本</span></div></div>
+            <div class="stat-card"><div class="stat-label">応援された数</div><div class="stat-value"><?= h((string)$cheerCount) ?><span class="stat-unit">回</span></div></div>
+            <div class="stat-card"><div class="stat-label">行動記録数</div><div class="stat-value"><?= h((string)$dailyCount) ?><span class="stat-unit">件</span></div></div>
             <div class="quick-links">
               <a class="btn btn-outline" href="qr.php">自分の匿名ID用QR</a>
               <a class="btn btn-outline" href="qr_bulk.php">配布用QRまとめ</a>
@@ -145,130 +136,117 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
     <footer class="app-footer"><?php require __DIR__.'/inc/bottom_nav.php'; ?></footer>
   </div>
 
-  <script>
-  /* ====== 1) PHPから生データ受け取り ====== */
-  const baseLabels = <?= json_encode($dates, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>; // "YYYY-MM-DD"
-  const baseBody   = <?= json_encode($avgBody) ?>;
-  const baseMental = <?= json_encode($avgMental) ?>;
+<script>
+/* ===== 1) PHPからの生データ ===== */
+const baseLabels = <?= json_encode($dates) ?>;
+const baseBody   = <?= json_encode($avgBody) ?>;
+const baseMental = <?= json_encode($avgMental) ?>;
+const readRows   = <?= json_encode($readRows, JSON_UNESCAPED_UNICODE) ?>;
+const actRows    = <?= json_encode($actRows,  JSON_UNESCAPED_UNICODE) ?>;
 
-  const readRows   = <?= json_encode($readRows, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>; // [{category, read_date}]
-  const actRows    = <?= json_encode($actRows,  JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>; // [{activity_type, log_date}]
+/* ===== 2) データ整形 ===== */
+const basePoints = baseLabels.map((d,i)=>({ t:new Date(d+'T00:00:00'), body:+baseBody[i], mental:+baseMental[i] }));
 
-  // 折れ線用データ(Date化・昇順)
-  const basePoints = baseLabels.map((d,i)=>({
-    t: new Date(d + 'T00:00:00'),
-    body: Number(baseBody[i] ?? 0),
-    mental: Number(baseMental[i] ?? 0)
-  })).sort((a,b)=>a.t-b.t);
+function normalizeLabel(s){ return (s||'').trim(); }
+function splitActivities(raw){
+  if(!raw)return[];
+  raw=raw.replace(/，/g,',');
+  try{ if(raw.startsWith('[')){const arr=JSON.parse(raw);return Array.isArray(arr)?arr.map(v=>normalizeLabel(String(v))):[];} }catch(_){}
+  return raw.split(',').map(s=>normalizeLabel(s)).filter(Boolean);
+}
 
-  // 円/ドーナツ用 生データ(Date化)
-  const readPoints = readRows.map(r => ({
-    t: new Date((r.read_date||'') + 'T00:00:00'),
-    category: r.category || '未分類'
-  }));
-  const actPoints = actRows.map(r => ({
-    t: new Date((r.log_date||'') + 'T00:00:00'),
-    activity: r.activity_type || '未設定'
-  }));
+// 複数選択を分解
+const actPoints=[];
+for(const r of actRows){
+  const t=new Date((r.log_date||'')+'T00:00:00');
+  const labels=splitActivities(r.activity_type||'');
+  if(labels.length===0) actPoints.push({t,activity:'未設定'});
+  else for(const lab of labels) actPoints.push({t,activity:lab});
+}
 
-  /* ====== 2) ユーティリティ ====== */
-  const fmt = (dt)=> dt.toLocaleDateString('ja-JP', {month:'numeric', day:'numeric'});
-
-  function sliceByRange(points, range){
-    if (range === 'all') return points;
-    const days = Number(range);
-    const cutoff = new Date(); cutoff.setHours(0,0,0,0);
-    cutoff.setDate(cutoff.getDate() - days + 1); // 今日含めdays日
-    return points.filter(p => p.t >= cutoff);
+/* ===== 3) 汎用ユーティリティ ===== */
+const fmt=(dt)=>dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+function sliceByRange(points,range){
+  if(range==='all')return points;
+  const days=+range;const cutoff=new Date();cutoff.setHours(0,0,0,0);
+  cutoff.setDate(cutoff.getDate()-days+1);
+  return points.filter(p=>p.t>=cutoff);
+}
+function countBy(list,key){
+  const map=new Map();
+  for(const it of list){
+    const k=it[key]||'未設定';
+    map.set(k,(map.get(k)||0)+1);
   }
+  // ★多い順にソート
+  const sorted=[...map.entries()].sort((a,b)=>b[1]-a[1]);
+  const labels=sorted.map(e=>e[0]);
+  const values=sorted.map(e=>e[1]);
+  return {labels,values};
+}
 
-  function countBy(list, key){
-    const map = new Map();
-    for (const it of list) {
-      const k = it[key] || '未設定';
-      map.set(k, (map.get(k) || 0) + 1);
-    }
-    const labels = Array.from(map.keys());
-    const values = labels.map(k => map.get(k));
-    return { labels, values };
-  }
+/* ===== 4) 初期描画 ===== */
+let currentRange='all';
+const initLine=sliceByRange(basePoints,currentRange);
+const lineChart=new Chart(document.getElementById('lineChart'),{
+  type:'line',
+  data:{
+    labels:initLine.map(p=>fmt(p.t)),
+    datasets:[
+      {label:'体の調子',data:initLine.map(p=>p.body),tension:.25},
+      {label:'心の調子',data:initLine.map(p=>p.mental),tension:.25}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,scales:{y:{suggestedMin:0,suggestedMax:100}}}
+});
 
-  /* ====== 3) 初期表示：全期間（タブと一致） ====== */
-  let currentRange = 'all';
+// 円グラフ（記事カテゴリ）
+const initReads=sliceByRange(readRows.map(r=>({t:new Date(r.read_date+'T00:00:00'),category:r.category||'未分類'})),currentRange);
+const catInit=countBy(initReads,'category');
+const pieChart=new Chart(document.getElementById('categoryChart'),{
+  type:'pie',data:{labels:catInit.labels,datasets:[{data:catInit.values}]},
+  options:{responsive:true,maintainAspectRatio:false}
+});
 
-  // 折れ線
-  const lineCtx = document.getElementById('lineChart');
-  const initLine = sliceByRange(basePoints, currentRange);
-  const lineChart = new Chart(lineCtx, {
-    type: 'line',
-    data: {
-      labels: initLine.map(p=>fmt(p.t)),
-      datasets: [
-        { label: '体の調子', data: initLine.map(p=>p.body), tension:.25 },
-        { label: '心の調子', data: initLine.map(p=>p.mental), tension:.25 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      layout:{padding:{left:8,right:8,top:8,bottom:8}},
-      scales:{ y:{ suggestedMin:0, suggestedMax:100 } }
-    }
+// ドーナツ（行動の割合）多い順
+const initActs=sliceByRange(actPoints,currentRange);
+const actInit=countBy(initActs,'activity');
+const donutChart=new Chart(document.getElementById('activityChart'),{
+  type:'doughnut',data:{labels:actInit.labels,datasets:[{data:actInit.values}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'55%'}
+});
+
+/* ===== 5) タブ切替 ===== */
+document.querySelectorAll('.range-tabs .tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(btn.dataset.range===currentRange)return;
+    currentRange=btn.dataset.range;
+    document.querySelectorAll('.range-tabs .tab').forEach(b=>b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+
+    // 折れ線
+    const lp=sliceByRange(basePoints,currentRange);
+    lineChart.data.labels=lp.map(p=>fmt(p.t));
+    lineChart.data.datasets[0].data=lp.map(p=>p.body);
+    lineChart.data.datasets[1].data=lp.map(p=>p.mental);
+    lineChart.update();
+
+    // 円
+    const rp=sliceByRange(readRows.map(r=>({t:new Date(r.read_date+'T00:00:00'),category:r.category||'未分類'})),currentRange);
+    const cc=countBy(rp,'category');
+    pieChart.data.labels=cc.labels;
+    pieChart.data.datasets[0].data=cc.values;
+    pieChart.update();
+
+    // ドーナツ
+    const ap=sliceByRange(actPoints,currentRange);
+    const ac=countBy(ap,'activity');
+    donutChart.data.labels=ac.labels;
+    donutChart.data.datasets[0].data=ac.values;
+    donutChart.update();
   });
-
-  // 円（カテゴリ別：読了）
-  const pieCtx = document.getElementById('categoryChart');
-  const initReads = sliceByRange(readPoints, currentRange);
-  const catInit = countBy(initReads, 'category');
-  const pieChart = new Chart(pieCtx, {
-    type:'pie',
-    data:{ labels: catInit.labels, datasets:[{ data: catInit.values }] },
-    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:12} }
-  });
-
-  // ドーナツ（活動別）
-  const donutCtx = document.getElementById('activityChart');
-  const initActs = sliceByRange(actPoints, currentRange);
-  const actInit = countBy(initActs, 'activity');
-  const donutChart = new Chart(donutCtx, {
-    type:'doughnut',
-    data:{ labels: actInit.labels, datasets:[{ data: actInit.values }] },
-    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:12}, cutout:'55%' }
-  });
-
-  /* ====== 4) タブ切替：3つのグラフをまとめて更新 ====== */
-  document.querySelectorAll('.range-tabs .tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if (btn.dataset.range === currentRange) return;
-      currentRange = btn.dataset.range;
-
-      // active切替
-      document.querySelectorAll('.range-tabs .tab').forEach(b=>b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-
-      // 折れ線
-      const lp = sliceByRange(basePoints, currentRange);
-      lineChart.data.labels = lp.map(p=>fmt(p.t));
-      lineChart.data.datasets[0].data = lp.map(p=>p.body);
-      lineChart.data.datasets[1].data = lp.map(p=>p.mental);
-      lineChart.update();
-
-      // 円（カテゴリ）
-      const r = sliceByRange(readPoints, currentRange);
-      const cc = countBy(r, 'category');
-      pieChart.data.labels = cc.labels;
-      pieChart.data.datasets[0].data = cc.values;
-      pieChart.update();
-
-      // ドーナツ（活動）
-      const a = sliceByRange(actPoints, currentRange);
-      const ac = countBy(a, 'activity');
-      donutChart.data.labels = ac.labels;
-      donutChart.data.datasets[0].data = ac.values;
-      donutChart.update();
-    });
-  });
-  </script>
-
-  <script src="js/ui-nav.js" defer></script>
+});
+</script>
+<script src="js/ui-nav.js" defer></script>
 </body>
 </html>
