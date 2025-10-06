@@ -27,6 +27,7 @@ FROM (
     dl.activity_type,
     NULL AS article_title
   FROM daily_logs AS dl
+  WHERE dl.anonymous_user_id <> :me_dl
 
   UNION ALL
 
@@ -40,6 +41,7 @@ FROM (
     a.title AS article_title
   FROM article_reads AS ar
   INNER JOIN articles AS a ON a.id = ar.article_id
+  WHERE ar.anonymous_user_id <> :me_ar
 ) AS feed
 LEFT JOIN (
   SELECT target_type, target_id, COUNT(*) AS cheer_count
@@ -50,7 +52,7 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT target_type, target_id, 1 AS my_cheered
   FROM cheers
-  WHERE anonymous_user_id = :me
+  WHERE anonymous_user_id = :me_mc
   GROUP BY target_type, target_id
 ) AS mc
   ON mc.target_type = feed.item_type AND mc.target_id = feed.item_id
@@ -58,7 +60,11 @@ ORDER BY feed.d DESC, feed.t DESC
 LIMIT 200
 ";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([':me' => $me]);
+$stmt->execute([
+  ':me_dl' => $me,
+  ':me_ar' => $me,
+  ':me_mc' => $me,
+]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -91,6 +97,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php foreach ($rows as $r):
         $cheerCount = (int)($r['cheer_count'] ?? 0);
         $myCheered  = !empty($r['my_cheered']);
+        $isMine     = ((int)$r['anonymous_user_id'] === (int)$me);
       ?>
         <div class="card_box">
           <article class="card card-flex">
@@ -105,17 +112,24 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <div class="support-area">
-              <button
-                class="support-btn<?= $myCheered ? ' is-on' : '' ?>"
-                data-type="<?= h($r['item_type']) ?>"
-                data-id="<?= (int)$r['item_id'] ?>"
-                aria-pressed="<?= $myCheered ? 'true' : 'false' ?>"
-                aria-label="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
-                title="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
-              >
-                <img src="images/ouen.png" alt="<?= $myCheered ? '応援中' : '応援する' ?>">
-              </button>
-              <span class="support-count" aria-live="polite">応援 <?= $cheerCount ?></span>
+              <?php if ($isMine): ?>
+                <button class="support-btn is-disabled" disabled aria-disabled="true" title="自分の記録は応援できません">
+                  <img src="images/ouen.png" alt="応援対象外">
+                </button>
+                <span class="support-count">応援 <?= $cheerCount ?></span>
+              <?php else: ?>
+                <button
+                  class="support-btn<?= $myCheered ? ' is-on' : '' ?>"
+                  data-type="<?= h($r['item_type']) ?>"
+                  data-id="<?= (int)$r['item_id'] ?>"
+                  aria-pressed="<?= $myCheered ? 'true' : 'false' ?>"
+                  aria-label="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
+                  title="<?= $myCheered ? '応援をやめる' : '応援する' ?>"
+                >
+                  <img src="images/ouen.png" alt="<?= $myCheered ? '応援中' : '応援する' ?>">
+                </button>
+                <span class="support-count" aria-live="polite">応援 <?= $cheerCount ?></span>
+              <?php endif; ?>
             </div>
           </article>
         </div>

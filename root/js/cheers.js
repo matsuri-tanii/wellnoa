@@ -1,10 +1,7 @@
-console.log('[cheers.js] loaded v2');
-
 document.addEventListener('click', async (e) => {
-  console.log('[cheers.js] click', e.target);
   const btn = e.target.closest('.support-btn');
-  console.log('[cheers.js] closest', btn);
   if (!btn) return;
+  if (btn.classList.contains('is-disabled') || btn.disabled) return;
 
   const type = btn.dataset.type;
   const id   = btn.dataset.id;
@@ -26,8 +23,6 @@ document.addEventListener('click', async (e) => {
     });
 
     const text = await res.text();
-    console.log('[cheers.js] response text:', text);
-
     const json = JSON.parse(text);
     if (!json.ok) throw new Error(json.error || 'toggle failed');
 
