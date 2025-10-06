@@ -1,4 +1,3 @@
-// js/admin-articles.js
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".toggle-publish-btn");
   if (!btn) return;

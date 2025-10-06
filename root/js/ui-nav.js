@@ -1,4 +1,3 @@
-// js/ui-nav.js
 (() => {
   const fab = document.querySelector('.fab-chip');
   if (!fab) return;
