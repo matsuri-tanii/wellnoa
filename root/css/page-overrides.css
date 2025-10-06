@@ -37,7 +37,7 @@
 .auth-card{max-width:420px;margin:40px auto;padding:20px;border:1px solid #eee;border-radius:12px;background:#fff}
 .auth-card h1{font-size:20px;margin-bottom:12px}
 .field{margin:10px 0}
-label{display:block;font-weight:600;margin-bottom:4px}
+.auth-card label{display:block;font-weight:600;margin-bottom:4px}
 input[type=email],input[type=password]{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
 .auth-card .btn{display:inline-block;padding:10px 14px;border:0;border-radius:10px;background:#17a877;color:#fff;font-weight:700;cursor:pointer}
 .errors{background:#fff5f5;border:1px solid #fecaca;color:#9b1c1c;border-radius:8px;padding:10px;margin-bottom:10px}
@@ -101,3 +101,93 @@ input[type=email],input[type=password]{width:100%;padding:10px;border:1px solid 
 
 /* qr.php */
 .qr-single{ padding:24px; }
+
+/* ====== コンパクト版 Articles（統合・最終） ====== */
+
+/* 見出しを小さめに */
+.compact-articles h2{font-size:18px;margin:4px 0 2px;}
+.compact-articles h3{font-size:14px;margin:0 0 6px;}
+
+/* 折りたたみ枠 */
+.compact-articles details.filters{
+  margin:6px 0 8px; border:1px solid rgba(0,0,0,.08);
+  border-radius:10px; background:#fff;
+}
+.compact-articles details.filters>summary{
+  list-style:none; cursor:pointer; padding:8px 12px;
+  -webkit-user-select:none; user-select:none;
+  display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;
+}
+.compact-articles details.filters[open]>summary{ border-bottom:1px solid rgba(0,0,0,.06); }
+
+/* フィルタバー：横並び＆高さ揃え */
+.compact-articles .filter-bar{
+  display:flex; flex-wrap:wrap; gap:8px 10px;
+  align-items:center; padding:8px; margin:0;
+}
+
+/* 共通高さ */
+.compact-articles .filter-bar select,
+.compact-articles .filter-bar input[type="search"],
+.compact-articles .filter-bar .btn{
+  height:34px; font-size:14px; border-radius:8px;
+}
+
+/* セレクト2つを横並びに（幅を固定／伸びすぎ防止） */
+.compact-articles .filter-bar .selects{ display:flex; gap:8px; flex:0 0 auto; }
+.compact-articles .filter-bar .selects select{
+  width:auto !important;       /* 100%指定の上書き */
+  flex:0 0 180px;               /* ベース幅 */
+  max-width:220px;
+  padding:0 10px;
+}
+
+/* 検索は余白に応じて広がる */
+.compact-articles .filter-bar input[type="search"]{
+  width:auto !important; min-width:180px; max-width:260px;
+  flex:1 1 220px; padding:0 10px;
+}
+
+/* 「未読のみ」ラベル：block指定の影響を打消し */
+.compact-articles .filter-bar label{
+  display:inline-flex; align-items:center; gap:6px; margin:0; font-size:13px;
+}
+.compact-articles .filter-bar .check{ height:34px; padding:0 4px; }
+.compact-articles .filter-bar .check input{ margin:0; }
+
+/* ボタン */
+.compact-articles .filter-bar .btn{
+  display:inline-flex; align-items:center; padding:0 12px;
+}
+
+/* カード（小ぶり） */
+.compact-articles .grid{
+  display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+}
+.compact-articles .card.article{ padding:10px; border-radius:10px; }
+.compact-articles .card.article .thumb{ width:100%; height:120px; object-fit:cover; border-radius:8px; }
+@media (min-width:640px){ .compact-articles .card.article .thumb{ height:140px; } }
+@media (min-width:960px){ .compact-articles .card.article .thumb{ height:160px; } }
+.compact-articles .title{ font-size:15px; line-height:1.35; margin:8px 0 4px; }
+.compact-articles .meta{ font-size:12px; opacity:.75; }
+.compact-articles .badge{ padding:1px 7px; font-size:11px; border-radius:999px; }
+
+/* ページャ */
+.compact-articles .pager{ display:flex; gap:6px; justify-content:center; margin:12px 0; }
+.compact-articles .pager a, .compact-articles .pager span{
+  padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-size:13px;
+}
+.compact-articles .is-current{ background:#eef6f4; font-weight:600; }
+
+/* スマホ時は自然に折返し、検索優先で広げる */
+@media (max-width:480px){
+  .compact-articles .filter-bar .selects select{ flex:1 1 160px; }
+  .compact-articles .filter-bar input[type="search"]{
+    flex:1 1 240px; min-width:160px; max-width:none;
+  }
+}
+
+/* モバイルで閉じ表示にしたい場合（任意） */
+@media (max-width:767px){
+  .compact-articles details.filters:not([open]){ overflow:hidden; }
+}
