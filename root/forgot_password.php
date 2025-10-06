@@ -4,13 +4,13 @@ require_once __DIR__.'/funcs.php';
 session_start();
 adopt_incoming_code();
 
-$flash = function_exists('pop_flash') ? pop_flash() : null;
-
 // CSRF
 if (empty($_SESSION['csrf_fp'])) {
   $_SESSION['csrf_fp'] = bin2hex(random_bytes(16));
 }
 $csrf = $_SESSION['csrf_fp'];
+
+// ここでは pop_flash を呼ばない（本文内で1回だけ表示する）
 ?>
 <!doctype html>
 <html lang="ja">
@@ -18,7 +18,6 @@ $csrf = $_SESSION['csrf_fp'];
   <meta charset="utf-8">
   <title>パスワード再発行</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 共通CSS -->
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -35,13 +34,14 @@ $csrf = $_SESSION['csrf_fp'];
     <?php require __DIR__.'/inc/header.php'; ?>
 
     <main class="main">
-
       <div class="auth-card">
         <h1>パスワード再発行</h1>
         <p>ご登録のメールアドレスを入力してください。再設定用のリンクをお送りします。</p>
 
-        <?php if (!empty($flash)): ?>
-          <div class="notice info"><?= h($flash['msg'] ?? $flash['message'] ?? '') ?></div>
+        <?php $flash = pop_flash(); if ($flash): ?>
+          <div class="notice notice-<?= h($flash['type'] ?? 'info') ?>">
+            <?= h($flash['message'] ?? ($flash['msg'] ?? '')) ?>
+          </div>
         <?php endif; ?>
 
         <form method="POST" action="send_reset_mail.php" class="form">

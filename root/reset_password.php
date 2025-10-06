@@ -39,9 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $upd = $pdo->prepare("UPDATE users SET password=:pw, reset_token_hash=NULL, reset_expires=NULL WHERE id=:id");
     $upd->execute([':pw'=>$hashPw, ':id'=>(int)$user['id']]);
 
-    if (function_exists('push_flash')) {
-      pop_flash('パスワードを更新しました。新しいパスワードでログインしてください。');
-    }
+    set_flash('パスワードを更新しました。新しいパスワードでログインしてください。', 'success');
     header('Location: login.php');
     exit;
   }
@@ -53,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <title>パスワード再設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 共通CSS -->
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -70,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php require __DIR__.'/inc/header.php'; ?>
 
     <main class="main">
-
       <div class="auth-card">
         <h1>パスワード再設定</h1>
         <p>新しいパスワードを入力してください。</p>
