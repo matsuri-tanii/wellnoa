@@ -191,3 +191,88 @@ input[type=email],input[type=password]{width:100%;padding:10px;border:1px solid 
 @media (max-width:767px){
   .compact-articles details.filters:not([open]){ overflow:hidden; }
 }
+
+/* === Articles ヘッダーUIを他ページと完全同寸に固定 === */
+.compact-articles .header-actions{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* バッジ（未登録モード/ログイン中） */
+.compact-articles .header-actions .badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;          /* 他ページ基準 */
+  line-height:1;
+  padding:6px 10px;        /* 角の丸み・内側余白を合わせる */
+  border-width:2px;        /* 枠ありデザインと高さを合わせる */
+  box-sizing:border-box;   /* 厚み分で高さが変わらないように */
+}
+
+/* 小ボタン（ログイン/登録/ログアウト） */
+.compact-articles .header-actions .btn-sm{
+  display:inline-flex;
+  align-items:center;
+  font-size:14px;          /* 他ページ基準 */
+  line-height:1;
+  padding:8px 14px;        /* base .btn の14pxと整合 */
+  border-radius:8px;
+  box-sizing:border-box;
+}
+
+/* QRリンクのベースライン合わせ */
+.compact-articles .header-actions .link-qr{
+  display:inline-flex;
+  align-items:center;
+  font-size:14px;
+  line-height:1;
+  padding:0 2px;           /* ボタンと高さ感を合わせる微調整 */
+  text-underline-offset:3px;
+}
+
+/* ロゴ高さは固定（幅属性の影響を打ち消し） */
+.compact-articles .brand__link img{
+  height:44px;
+  width:auto !important;
+  display:block;
+}
+
+/* ===== articles（compact-articles）でもヘッダーを共通サイズに固定 ===== */
+.layout.compact-articles header.site-header{
+  font-size: 16px !important;      /* ベースを固定（継承差をリセット） */
+  line-height: 1.1 !important;
+}
+
+/* バッジ（未登録モード / ログイン中） */
+.layout.compact-articles header.site-header .badge{
+  font-size: 14px !important;
+  line-height: 1 !important;
+  padding: 6px 10px !important;
+  box-sizing: border-box !important;
+}
+
+/* ボタン（ログイン/登録/ログアウト） */
+.layout.compact-articles header.site-header .btn-sm,
+.layout.compact-articles header.site-header .btn{
+  font-size: 14px !important;
+  line-height: 1 !important;
+  padding: 8px 14px !important;    /* 他ページと同寸 */
+  border-radius: 8px !important;
+}
+
+/* QRリンク */
+.layout.compact-articles header.site-header .link-qr{
+  font-size: 14px !important;
+  line-height: 1 !important;
+  text-underline-offset: 3px !important;
+  padding: 0 2px !important;
+}
+
+/* ロゴは高さ基準で統一（HTMLの width 属性を無効化） */
+.layout.compact-articles header.site-header .brand__link img{
+  height: 44px !important;
+  width: auto !important;
+  display: block;
+}
