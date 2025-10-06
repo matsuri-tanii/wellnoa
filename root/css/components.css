@@ -133,6 +133,8 @@
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
+.support-btn.is-disabled { opacity:.45; cursor:not-allowed; }
+
 .notice-success {
   background: #e6fffa;
   border: 1px solid #81e6d9;
