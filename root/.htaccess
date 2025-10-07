@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteBase /
+
+# register/login/landing は例外
+RewriteRule ^(register|login|landing)\.php$ $1.php [L]
+
+# 既存ファイル・ディレクトリはそのまま
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# それ以外は index.php に
+RewriteRule ^ index.php [L]
