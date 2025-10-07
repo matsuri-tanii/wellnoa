@@ -47,10 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // ログイン状態にする
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        $_SESSION['user_id'] = $userId;
+        $_SESSION['user_id'] = (int)$u['id'];
+
+        // セッション固定化対策
+        session_regenerate_id(true);
 
         // 未登録モードCookieを削除
         setcookie('unregistered', '', time()-3600, '/');
+
+        // 一度でもアカウントを持った人のフラグ
+        setcookie('has_account', '1', [
+          'expires'  => time() + 60*60*24*365,
+          'path'     => '/',
+          'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+          'httponly' => false,
+          'samesite' => 'Lax',
+        ]);
 
         // いまの anon_code をユーザーに紐付け
         link_current_anon_to_user($pdo, $userId);

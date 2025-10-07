@@ -207,7 +207,10 @@ if (!function_exists('mark_unregistered_mode')) {
 
 if (!function_exists('is_unregistered_mode')) {
     function is_unregistered_mode(): bool {
-        if (!empty($_SESSION['user_id'])) return false;
+        if (!empty($_SESSION['user_id'])) return false; // ログイン中は未登録扱いにしない
+        if (!empty($_COOKIE['has_account']) && $_COOKIE['has_account'] === '1') {
+            return false; // ★登録済みフラグがあれば未登録扱いにしない
+        }
         return isset($_COOKIE['unregistered']) && $_COOKIE['unregistered'] === '1';
     }
 }
