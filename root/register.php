@@ -3,7 +3,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/funcs.php';
 
-// ✅ ログイン済み（user_idあり）だけは登録ページに来ても index へ戻す
+// ✅ 既にログイン済みなら登録ページに来れないように
 if (is_logged_in()) {
   redirect('index.php');
 }
@@ -39,23 +39,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($st->fetch()) {
         $errors[] = 'このメールアドレスは既に登録されています。';
       } else {
-        // 作成
+        // 新規作成
         $hash = password_hash($pw, PASSWORD_DEFAULT);
-        $ins  = $pdo->prepare('INSERT INTO users(email, password_hash, created_at, updated_at) VALUES(:e, :p, NOW(), NOW())');
+        $ins  = $pdo->prepare('
+          INSERT INTO users(email, password_hash, created_at, updated_at)
+          VALUES(:e, :p, NOW(), NOW())
+        ');
         $ins->execute([':e'=>$email, ':p'=>$hash]);
         $userId = (int)$pdo->lastInsertId();
 
         // ログイン状態にする
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        $_SESSION['user_id'] = (int)$u['id'];
+        $_SESSION['user_id'] = $userId;
+        session_regenerate_id(true); // セッション固定化対策
 
-        // セッション固定化対策
-        session_regenerate_id(true);
-
-        // 未登録モードCookieを削除
+        // ✅ 未登録モードCookieを削除
         setcookie('unregistered', '', time()-3600, '/');
 
-        // 一度でもアカウントを持った人のフラグ
+        // ✅ 「登録済み」フラグをCookieに保持
         setcookie('has_account', '1', [
           'expires'  => time() + 60*60*24*365,
           'path'     => '/',
@@ -64,8 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           'samesite' => 'Lax',
         ]);
 
-        // いまの anon_code をユーザーに紐付け
-        link_current_anon_to_user($pdo, $userId);
+        // ✅ 匿名利用データをこのユーザーに統合して引き継ぐ
+        link_and_merge_current_anon_for_user($pdo, $userId);
+
+        // ✅ 主ID（最古のanonymous_users）の anon_code をCookieに設定
+        $primary = get_primary_anon_code_for_user($pdo, $userId);
+        if ($primary) {
+          setcookie('anon_code', $primary, time()+3600*24*365, '/');
+          $_COOKIE['anon_code'] = $primary; // 即参照可能に
+        }
 
         set_flash('アカウントを作成しました！');
         redirect('index.php');
