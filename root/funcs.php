@@ -207,6 +207,7 @@ if (!function_exists('mark_unregistered_mode')) {
 
 if (!function_exists('is_unregistered_mode')) {
     function is_unregistered_mode(): bool {
+        if (!empty($_SESSION['user_id'])) return false;
         return isset($_COOKIE['unregistered']) && $_COOKIE['unregistered'] === '1';
     }
 }

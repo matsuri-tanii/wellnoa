@@ -49,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         $_SESSION['user_id'] = $userId;
 
+        // 未登録モードCookieを削除
+        setcookie('unregistered', '', time()-3600, '/');
+
         // いまの anon_code をユーザーに紐付け
         link_current_anon_to_user($pdo, $userId);
 
