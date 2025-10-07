@@ -3,9 +3,14 @@
 declare(strict_types=1);
 require_once __DIR__.'/funcs.php';
 
+// ✅ ログイン済み（user_idあり）だけは登録ページに来ても index へ戻す
 if (is_logged_in()) {
   redirect('index.php');
 }
+
+// ✅ 匿名で来た人はそのまま通す（QR経由コード採用＆未登録クッキー明示）
+adopt_incoming_code();
+mark_unregistered_mode();
 
 $errors = [];
 $email  = (string)($_POST['email'] ?? '');
