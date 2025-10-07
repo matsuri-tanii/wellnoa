@@ -31,7 +31,7 @@ $ratioPercent = (int)floor($prog['ratio'] * 100);
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>成長の記録 - Wellnoa</title>
+  <title>Wellnoa - 成長を見る</title>
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
