@@ -30,9 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // セッション固定化対策
         session_regenerate_id(true);
 
-        setcookie('unregistered', '', time()-3600, '/'); // ← ここ！
+        // 未登録モードCookieを削除
+        setcookie('unregistered', '', time()-3600, '/');
 
-        // 一度でもアカウントを持った人のフラグ
+        // アカウントを持っているフラグを1年保持
         setcookie('has_account', '1', [
           'expires'  => time() + 60*60*24*365,
           'path'     => '/',
@@ -40,8 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           'httponly' => false,
           'samesite' => 'Lax',
         ]);
-        // いまの anon_code を自分にひも付け（匿名で貯めた記録を引き継ぐため）
-        link_current_anon_to_user($pdo, (int)$u['id']);
+
+        // ✅ 匿名利用データをログインアカウントに統合して引き継ぎ
+        link_and_merge_current_anon_for_user($pdo, (int)$u['id']);
+
+        // ✅ 主ID（最古のanonymous_users）の anon_code をCookieに設定（これが超重要）
+        $primary = get_primary_anon_code_for_user($pdo, (int)$u['id']);
+        if ($primary) {
+            setcookie('anon_code', $primary, time()+3600*24*365, '/');
+            $_COOKIE['anon_code'] = $primary; // 以降で即参照できるように
+        }
 
         set_flash('ログインしました。');
         redirect('index.php');

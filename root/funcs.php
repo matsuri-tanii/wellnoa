@@ -376,3 +376,25 @@ if (!function_exists('link_and_merge_current_anon_for_user')) {
         merge_anonymous_identities_for_user($pdo, $userId);
     }
 }
+
+// ================================================================
+// 10. 主ID(最古のanonymous_users.id)のanon_code取得
+// ================================================================
+if (!function_exists('get_primary_anon_code_for_user')) {
+    /**
+     * 指定ユーザーの「主」anonymous_usersレコードに対応する anon_code を返す。
+     * merge_anonymous_identities_for_user() と組み合わせて使用。
+     */
+    function get_primary_anon_code_for_user(PDO $pdo, int $userId): ?string {
+        $sql = "SELECT au.anon_code
+                  FROM user_anon_links ual
+                  JOIN anonymous_users au ON au.anon_code = ual.anon_code
+                 WHERE ual.user_id = :uid
+              ORDER BY au.id ASC
+                 LIMIT 1";
+        $st = $pdo->prepare($sql);
+        $st->execute([':uid'=>$userId]);
+        $code = $st->fetchColumn();
+        return $code ? (string)$code : null;
+    }
+}
