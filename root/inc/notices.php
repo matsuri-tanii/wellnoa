@@ -13,8 +13,10 @@ $flash = function_exists('pop_flash') ? pop_flash() : null;
 $flashMsg  = $flash['message'] ?? ($flash['msg'] ?? '');
 $flashType = $flash['type']    ?? 'info'; // 'success' | 'info' | 'warn' | 'error' など
 
-// 未登録モード判定
-$isUnreg = function_exists('is_unregistered_mode') ? is_unregistered_mode() : false;
+// 判定
+$isUnreg     = function_exists('is_unregistered_mode') ? is_unregistered_mode() : false;
+$hasAccount  = !empty($_COOKIE['has_account']) && $_COOKIE['has_account'] === '1';
+$isLoggedIn  = function_exists('is_logged_in') ? is_logged_in() : false;
 ?>
 <div class="notice-area">
   <?php if ($flashMsg !== ''): ?>
@@ -23,14 +25,23 @@ $isUnreg = function_exists('is_unregistered_mode') ? is_unregistered_mode() : fa
     </div>
   <?php endif; ?>
 
-  <?php if ($isUnreg && !$hideRegisterNudge): ?>
-    <div class="notice notice-warn">
-      今は未登録モードで利用中です。端末変更やQR紛失でデータが見られなくなる可能性があります。
-      <a href="register.php" class="link-strong">登録する</a>
-      <button type="button" class="btn btn-sm" style="margin-left:8px"
-        onclick="this.parentElement.style.display='none';document.cookie='dismiss_reg=1; path=/; max-age=2592000'">
-        閉じる
-      </button>
-    </div>
+  <?php if (!$hideRegisterNudge): ?>
+    <?php if ($isUnreg && !$isLoggedIn && !$hasAccount): ?>
+      <!-- 未登録モード（匿名で利用中） -->
+      <div class="notice notice-warn">
+        今は未登録モードで利用中です。端末変更やQR紛失でデータが見られなくなる可能性があります。
+        <a href="register.php" class="link-strong">登録する</a>
+        <button type="button" class="btn btn-sm" style="margin-left:8px"
+          onclick="this.parentElement.style.display='none';document.cookie='dismiss_reg=1; path=/; max-age=2592000'">
+          閉じる
+        </button>
+      </div>
+
+    <?php elseif (!$isLoggedIn && $hasAccount): ?>
+      <!-- 登録済みだけどログインしていない状態 -->
+      <div class="notice notice-info">
+        アカウントをお持ちの方は、<a href="login.php" class="link-strong">ログイン</a>して続きからご利用ください。
+      </div>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
