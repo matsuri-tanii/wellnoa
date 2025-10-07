@@ -329,30 +329,24 @@ if (!function_exists('merge_anonymous_identities_for_user')) {
         // 5) マージ（トランザクション）
         $pdo->beginTransaction();
         try {
-            // 5-1) 行動テーブルを主IDに寄せる
+            // 5-1) 行動テーブルを主IDに寄せる（位置指定のみ）
             $tables = ['article_reads','daily_logs','cheers'];
             foreach ($tables as $t) {
-                $sql = "UPDATE $t SET anonymous_user_id = :primaryId WHERE anonymous_user_id IN (".
-                        implode(',', array_fill(0, count($ids), '?')).")";
-                $st = $pdo->prepare($sql);
-                $params = array_merge([':primaryId'=>$primaryId], $ids);
-                // PDOは名前付き&位置指定を混ぜられないので分ける:
-                $st = $pdo->prepare(
-                    "UPDATE $t SET anonymous_user_id = ? WHERE anonymous_user_id IN (".
-                    implode(',', array_fill(0, count($ids), '?')).")"
-                );
+                $ph = implode(',', array_fill(0, count($ids), '?'));
+                $sql = "UPDATE {$t} SET anonymous_user_id = ? WHERE anonymous_user_id IN ({$ph})";
+                $st  = $pdo->prepare($sql);
                 $st->execute(array_merge([$primaryId], $ids));
             }
 
-            // 5-2) 主IDに合算ポイント反映
+            // 5-2) 主IDに合算ポイント反映（名前付きOK）
             $st = $pdo->prepare("UPDATE anonymous_users SET total_points=:pt WHERE id=:id");
             $st->execute([':pt'=>$sumPoints, ':id'=>$primaryId]);
 
-            // 5-3) 余剰 anonymous_users を削除（主IDは残す）
+            // 5-3) 余剰 anonymous_users を削除（位置指定のみ）
             $others = array_values(array_diff($ids, [$primaryId]));
             if ($others) {
-                $st = $pdo->prepare("DELETE FROM anonymous_users WHERE id IN (".
-                        implode(',', array_fill(0, count($others), '?')).")");
+                $ph = implode(',', array_fill(0, count($others), '?'));
+                $st = $pdo->prepare("DELETE FROM anonymous_users WHERE id IN ({$ph})");
                 $st->execute($others);
             }
 
