@@ -47,6 +47,9 @@ adopt_incoming_code();
       ※登録せずに始める場合、<strong>端末変更やQR紛失でデータが見られなくなる</strong>可能性があります。
     </p>
 
+    <p class="sub-links">
+      すでに匿名QRをお持ちですか？ → <a href="qr.php">QRを表示</a> ／ <a href="qr_bulk.php">配布用QRを作る</a>
+    </p>
   </section>
 </main>
 

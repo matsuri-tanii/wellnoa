@@ -14,7 +14,7 @@ $options = [
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>Wellnoa - 記録を書く・見る</title>
+  <title>記録ハブ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">

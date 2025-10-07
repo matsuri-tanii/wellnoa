@@ -66,6 +66,7 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="css/notices.css">
   <link rel="stylesheet" href="css/utilities.css">
   <link rel="stylesheet" href="css/charts.css">
+  <link rel="stylesheet" href="css/page-overrides.css">
   <style>
     .range-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
     .range-tabs .tab{
@@ -73,7 +74,6 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
     }
     .range-tabs .tab.is-active{background:#eef6f4;border-color:#bfe6db;font-weight:700}
   </style>
-  <link rel="stylesheet" href="css/page-overrides.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>

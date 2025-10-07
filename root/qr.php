@@ -16,7 +16,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . rawu
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>Wellnoa - 自分用QRコード</title>
+  <title>自分用QRコード</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
