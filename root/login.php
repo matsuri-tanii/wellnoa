@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         $_SESSION['user_id'] = (int)$u['id'];
 
+        setcookie('unregistered', '', time()-3600, '/'); // ← ここ！
+
         // いまの anon_code を自分にひも付け（匿名で貯めた記録を引き継ぐため）
         link_current_anon_to_user($pdo, (int)$u['id']);
 
