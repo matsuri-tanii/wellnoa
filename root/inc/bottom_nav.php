@@ -19,6 +19,9 @@ if (!function_exists('nav_on')) {
   <a class="bottom-link<?= nav_on('points.php') ?>" href="points.php">
     <img src="images/plants.png" alt="" width="24"> <div>成長</div>
   </a>
+    <a class="bottom-link<?= nav_on('read_all.php') ?>" href="read_all.php">
+    <img src="images/ouen.png" alt="" width="24"> <div>応援</div>
+  </a>
 </nav>
 
 <!-- 右下に浮かぶ“記録する”ボタン（モバイルのみ表示） -->

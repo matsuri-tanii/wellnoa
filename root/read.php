@@ -55,7 +55,7 @@ foreach ($results as $record) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>今までのきろく一覧</title>
+  <title>Wellnoa - すべての記録</title>
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">

@@ -71,7 +71,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>みんなのきろく</title>
+  <title>Wellnoa - みんなの記録(応援)</title>
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
