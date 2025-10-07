@@ -13,7 +13,7 @@ set_guest_cookie();
 $sql = "SELECT log_date, AVG(body_condition) AS avg_body, AVG(mental_condition) AS avg_mental
         FROM daily_logs WHERE anonymous_user_id = :uid
         GROUP BY log_date ORDER BY log_date";
-$st = $pdo->prepare($sql); 
+$st = $pdo->prepare($sql);
 $st->execute([':uid'=>$uid]);
 $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
@@ -22,17 +22,35 @@ $avgBody   = array_map('floatval', array_column($rows, 'avg_body'));
 $avgMental = array_map('floatval', array_column($rows, 'avg_mental'));
 
 /* ---------------------- 数字カラム ---------------------- */
+// 読んだ記事数
 $st = $pdo->prepare("SELECT COUNT(*) FROM article_reads WHERE anonymous_user_id = :uid");
-$st->execute([':uid'=>$uid]); 
+$st->execute([':uid'=>$uid]);
 $articleCount = (int)$st->fetchColumn();
 
-$cheerCount = (int)$pdo->query("SELECT COUNT(*) FROM cheers WHERE target_type IN('daily','read')")->fetchColumn();
+// ★ あなたの記録に付いた応援“だけ”の合計
+$st = $pdo->prepare("
+  SELECT COUNT(*)
+  FROM cheers c
+  WHERE
+    (c.target_type = 'daily' AND EXISTS (
+       SELECT 1 FROM daily_logs dl
+       WHERE dl.id = c.target_id AND dl.anonymous_user_id = :uid1
+    ))
+    OR
+    (c.target_type = 'read' AND EXISTS (
+       SELECT 1 FROM article_reads ar
+       WHERE ar.id = c.target_id AND ar.anonymous_user_id = :uid2
+    ))
+");
+$st->execute([':uid1'=>$uid, ':uid2'=>$uid]);
+$cheerCount = (int)$st->fetchColumn();
 
+// 行動記録数
 $st = $pdo->prepare("SELECT COUNT(*) FROM daily_logs WHERE anonymous_user_id = :uid");
-$st->execute([':uid'=>$uid]); 
+$st->execute([':uid'=>$uid]);
 $dailyCount = (int)$st->fetchColumn();
 
-/* ---------------------- 円 / ドーナツ用 ---------------------- */
+/* ---------------------- 円 / ドーナツ用（生データ） ---------------------- */
 $st = $pdo->prepare("
   SELECT a.category, ar.read_date
   FROM article_reads ar
@@ -40,7 +58,7 @@ $st = $pdo->prepare("
   WHERE ar.anonymous_user_id = :uid
 ");
 $st->execute([':uid'=>$uid]);
-$readRows = $st->fetchAll(PDO::FETCH_ASSOC);
+$readRows = $st->fetchAll(PDO::FETCH_ASSOC);   // [{category, read_date}]
 
 $st = $pdo->prepare("
   SELECT activity_type, log_date
@@ -48,7 +66,7 @@ $st = $pdo->prepare("
   WHERE anonymous_user_id = :uid
 ");
 $st->execute([':uid'=>$uid]);
-$actRows = $st->fetchAll(PDO::FETCH_ASSOC);
+$actRows = $st->fetchAll(PDO::FETCH_ASSOC);    // [{activity_type, log_date}]
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -56,6 +74,7 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wellnoa - あなたの小さな健康習慣</title>
+  <!-- 共通CSS（順番固定） -->
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -66,6 +85,7 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="css/notices.css">
   <link rel="stylesheet" href="css/utilities.css">
   <link rel="stylesheet" href="css/charts.css">
+  <!-- ページ固有の軽い調整（タブ見た目） -->
   <style>
     .range-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
     .range-tabs .tab{
@@ -83,9 +103,9 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
 
     <main class="main">
       <?php require __DIR__.'/inc/notices.php'; ?>
+
       <div class="main-inner">
         <div class="dashboard-grid">
-
           <!-- 左：グラフ群 -->
           <div class="chart-column">
             <div class="range-tabs" role="tablist" aria-label="期間">
@@ -121,9 +141,21 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
 
           <!-- 右：数字 -->
           <div class="stats-column">
-            <div class="stat-card"><div class="stat-label">読んだ記事</div><div class="stat-value"><?= h((string)$articleCount) ?><span class="stat-unit">本</span></div></div>
-            <div class="stat-card"><div class="stat-label">応援された数</div><div class="stat-value"><?= h((string)$cheerCount) ?><span class="stat-unit">回</span></div></div>
-            <div class="stat-card"><div class="stat-label">行動記録数</div><div class="stat-value"><?= h((string)$dailyCount) ?><span class="stat-unit">件</span></div></div>
+            <div class="stat-card">
+              <div class="stat-label">読んだ記事</div>
+              <div class="stat-value"><?= h((string)$articleCount) ?><span class="stat-unit">本</span></div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">応援された数</div>
+              <div class="stat-value"><?= h((string)$cheerCount) ?><span class="stat-unit">回</span></div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">行動記録数</div>
+              <div class="stat-value"><?= h((string)$dailyCount) ?><span class="stat-unit">件</span></div>
+            </div>
+
             <div class="quick-links">
               <a class="btn btn-outline" href="qr.php">自分の匿名ID用QR</a>
               <a class="btn btn-outline" href="qr_bulk.php">配布用QRまとめ</a>
@@ -138,28 +170,33 @@ $actRows = $st->fetchAll(PDO::FETCH_ASSOC);
 
 <script>
 /* ===== 1) PHPからの生データ ===== */
-const baseLabels = <?= json_encode($dates) ?>;
+const baseLabels = <?= json_encode($dates, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
 const baseBody   = <?= json_encode($avgBody) ?>;
 const baseMental = <?= json_encode($avgMental) ?>;
-const readRows   = <?= json_encode($readRows, JSON_UNESCAPED_UNICODE) ?>;
-const actRows    = <?= json_encode($actRows,  JSON_UNESCAPED_UNICODE) ?>;
+const readRows   = <?= json_encode($readRows, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+const actRows    = <?= json_encode($actRows,  JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
 
 /* ===== 2) データ整形 ===== */
-const basePoints = baseLabels.map((d,i)=>({ t:new Date(d+'T00:00:00'), body:+baseBody[i], mental:+baseMental[i] }));
+const basePoints = baseLabels.map((d,i)=>({ t:new Date(d+'T00:00:00'), body:+(baseBody[i]||0), mental:+(baseMental[i]||0) }));
 
 function normalizeLabel(s){ return (s||'').trim(); }
 function splitActivities(raw){
-  if(!raw)return[];
-  raw=raw.replace(/，/g,',');
-  try{ if(raw.startsWith('[')){const arr=JSON.parse(raw);return Array.isArray(arr)?arr.map(v=>normalizeLabel(String(v))):[];} }catch(_){}
+  if(!raw) return [];
+  raw = raw.replace(/，/g,',');
+  try{
+    if(raw.startsWith('[')){
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.map(v=>normalizeLabel(String(v))) : [];
+    }
+  }catch(_){}
   return raw.split(',').map(s=>normalizeLabel(s)).filter(Boolean);
 }
 
-// 複数選択を分解
+// 複数選択を分解（ヨガ,読書 → ヨガ／読書で1カウントずつ）
 const actPoints=[];
 for(const r of actRows){
-  const t=new Date((r.log_date||'')+'T00:00:00');
-  const labels=splitActivities(r.activity_type||'');
+  const t = new Date((r.log_date||'')+'T00:00:00');
+  const labels = splitActivities(r.activity_type||'');
   if(labels.length===0) actPoints.push({t,activity:'未設定'});
   else for(const lab of labels) actPoints.push({t,activity:lab});
 }
@@ -167,8 +204,8 @@ for(const r of actRows){
 /* ===== 3) 汎用ユーティリティ ===== */
 const fmt=(dt)=>dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
 function sliceByRange(points,range){
-  if(range==='all')return points;
-  const days=+range;const cutoff=new Date();cutoff.setHours(0,0,0,0);
+  if(range==='all') return points;
+  const days=+range; const cutoff=new Date(); cutoff.setHours(0,0,0,0);
   cutoff.setDate(cutoff.getDate()-days+1);
   return points.filter(p=>p.t>=cutoff);
 }
@@ -178,15 +215,15 @@ function countBy(list,key){
     const k=it[key]||'未設定';
     map.set(k,(map.get(k)||0)+1);
   }
-  // ★多い順にソート
+  // 多い順で並べ替え
   const sorted=[...map.entries()].sort((a,b)=>b[1]-a[1]);
-  const labels=sorted.map(e=>e[0]);
-  const values=sorted.map(e=>e[1]);
-  return {labels,values};
+  return { labels: sorted.map(e=>e[0]), values: sorted.map(e=>e[1]) };
 }
 
 /* ===== 4) 初期描画 ===== */
 let currentRange='all';
+
+// 折れ線
 const initLine=sliceByRange(basePoints,currentRange);
 const lineChart=new Chart(document.getElementById('lineChart'),{
   type:'line',
@@ -200,27 +237,30 @@ const lineChart=new Chart(document.getElementById('lineChart'),{
   options:{responsive:true,maintainAspectRatio:false,scales:{y:{suggestedMin:0,suggestedMax:100}}}
 });
 
-// 円グラフ（記事カテゴリ）
+// 円（カテゴリ）
 const initReads=sliceByRange(readRows.map(r=>({t:new Date(r.read_date+'T00:00:00'),category:r.category||'未分類'})),currentRange);
 const catInit=countBy(initReads,'category');
 const pieChart=new Chart(document.getElementById('categoryChart'),{
-  type:'pie',data:{labels:catInit.labels,datasets:[{data:catInit.values}]},
+  type:'pie',
+  data:{labels:catInit.labels,datasets:[{data:catInit.values}]},
   options:{responsive:true,maintainAspectRatio:false}
 });
 
-// ドーナツ（行動の割合）多い順
+// ドーナツ（行動）
 const initActs=sliceByRange(actPoints,currentRange);
 const actInit=countBy(initActs,'activity');
 const donutChart=new Chart(document.getElementById('activityChart'),{
-  type:'doughnut',data:{labels:actInit.labels,datasets:[{data:actInit.values}]},
+  type:'doughnut',
+  data:{labels:actInit.labels,datasets:[{data:actInit.values}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'55%'}
 });
 
 /* ===== 5) タブ切替 ===== */
 document.querySelectorAll('.range-tabs .tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    if(btn.dataset.range===currentRange)return;
+    if(btn.dataset.range===currentRange) return;
     currentRange=btn.dataset.range;
+
     document.querySelectorAll('.range-tabs .tab').forEach(b=>b.classList.remove('is-active'));
     btn.classList.add('is-active');
 
@@ -247,6 +287,7 @@ document.querySelectorAll('.range-tabs .tab').forEach(btn=>{
   });
 });
 </script>
+
 <script src="js/ui-nav.js" defer></script>
 </body>
 </html>
