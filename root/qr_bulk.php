@@ -32,7 +32,7 @@ for ($i = 0; $i < $count; $i++) {
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>Wellnoa QR配布カード（印刷用）</title>
+  <title>Wellnoa - QR配布カード（印刷用）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
